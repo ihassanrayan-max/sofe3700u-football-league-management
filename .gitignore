@@ -1,0 +1,10 @@
+**/.env
+**/.env.*
+!**/.env.example
+**/.demo-logins.local.txt
+**/.venv/
+**/__pycache__/
+**/*.pyc
+**/*.log
+**/*.zip
+**/work/

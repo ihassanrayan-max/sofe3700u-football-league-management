@@ -1,0 +1,167 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2900" height="1500" viewBox="0 0 2900 1500">
+<rect width="100%" height="100%" fill="white"/>
+<text x="1450" y="45" text-anchor="middle" font-family="Arial,sans-serif" font-size="28" font-weight="700" fill="#17233b">Football League Management — ER Diagram</text>
+<text x="1450" y="76" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#334155">Chen notation · Group 12 · MySQL Phase II</text>
+<line x1="520" y1="260" x2="920" y2="260" stroke="#555d68" stroke-width="1.7"/>
+<line x1="920" y1="260" x2="1320" y2="260" stroke="#555d68" stroke-width="1.7"/>
+<text x="650" y="230" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" fill="#273244">(0,N)</text>
+<text x="1190" y="230" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" fill="#273244">(1,1)</text>
+<line x1="1320" y1="260" x2="1320" y2="460" stroke="#555d68" stroke-width="1.7"/>
+<line x1="1320" y1="460" x2="1320" y2="670" stroke="#555d68" stroke-width="1.7"/>
+<text x="1370" y="350" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" fill="#273244">(0,N)</text>
+<text x="1370" y="580" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" fill="#273244">(1,1)</text>
+<line x1="2200" y1="260" x2="1770" y2="455" stroke="#555d68" stroke-width="1.7"/>
+<line x1="1770" y1="455" x2="1320" y2="670" stroke="#555d68" stroke-width="1.7"/>
+<text x="2070" y="330" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" fill="#273244">(0,N)</text>
+<text x="1450" y="600" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" fill="#273244">(1,1)</text>
+<line x1="2200" y1="260" x2="2300" y2="455" stroke="#555d68" stroke-width="1.7"/>
+<line x1="2300" y1="455" x2="2330" y2="670" stroke="#555d68" stroke-width="1.7"/>
+<text x="2250" y="330" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" fill="#273244">(0,N)</text>
+<text x="2380" y="580" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" fill="#273244">(1,1)</text>
+<line x1="1320" y1="670" x2="1090" y2="900" stroke="#555d68" stroke-width="1.7"/>
+<line x1="1090" y1="900" x2="1320" y2="1130" stroke="#555d68" stroke-width="1.7"/>
+<text x="1160" y="760" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" fill="#273244">(0,N)</text>
+<text x="1250" y="1040" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" fill="#273244">(1,1)</text>
+<line x1="1320" y1="670" x2="1550" y2="900" stroke="#555d68" stroke-width="1.7"/>
+<line x1="1550" y1="900" x2="1320" y2="1130" stroke="#555d68" stroke-width="1.7"/>
+<text x="1480" y="760" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" fill="#273244">(0,N)</text>
+<text x="1390" y="1040" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" fill="#273244">(1,1)</text>
+<line x1="2330" y1="670" x2="2330" y2="900" stroke="#555d68" stroke-width="1.7"/>
+<line x1="2330" y1="900" x2="2330" y2="1130" stroke="#555d68" stroke-width="1.7"/>
+<text x="2390" y="780" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" fill="#273244">(0,N)</text>
+<text x="2390" y="1030" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" fill="#273244">(1,1)</text>
+<line x1="1320" y1="1130" x2="1830" y2="1130" stroke="#555d68" stroke-width="1.7"/>
+<line x1="1830" y1="1130" x2="2330" y2="1130" stroke="#555d68" stroke-width="1.7"/>
+<text x="1450" y="1090" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" fill="#273244">(0,N)</text>
+<text x="2170" y="1090" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" fill="#273244">(1,1)</text>
+<line x1="330" y1="650" x2="70" y2="780" stroke="#555d68" stroke-width="1.7"/>
+<ellipse cx="70" cy="780" rx="52.5" ry="25" fill="white" stroke="#69717b" stroke-width="1.5"/>
+<text x="70" y="785" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" text-decoration="underline" fill="#182230">user_id</text>
+<line x1="330" y1="650" x2="245" y2="780" stroke="#555d68" stroke-width="1.7"/>
+<ellipse cx="245" cy="780" rx="74.5" ry="25" fill="white" stroke="#69717b" stroke-width="1.5"/>
+<text x="245" y="785" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" fill="#182230">display_name</text>
+<line x1="330" y1="650" x2="420" y2="780" stroke="#555d68" stroke-width="1.7"/>
+<ellipse cx="420" cy="780" rx="52.5" ry="25" fill="white" stroke="#69717b" stroke-width="1.5"/>
+<text x="420" y="785" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" fill="#182230">email</text>
+<line x1="330" y1="650" x2="585" y2="780" stroke="#555d68" stroke-width="1.7"/>
+<ellipse cx="585" cy="780" rx="52.5" ry="25" fill="white" stroke="#69717b" stroke-width="1.5"/>
+<text x="585" y="785" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" fill="#182230">role</text>
+<line x1="520" y1="260" x2="220" y2="125" stroke="#555d68" stroke-width="1.7"/>
+<ellipse cx="220" cy="125" rx="84.5" ry="25" fill="white" stroke="#69717b" stroke-width="1.5"/>
+<text x="220" y="130" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" text-decoration="underline" fill="#182230">competition_id</text>
+<line x1="520" y1="260" x2="420" y2="125" stroke="#555d68" stroke-width="1.7"/>
+<ellipse cx="420" cy="125" rx="94.5" ry="25" fill="white" stroke="#69717b" stroke-width="1.5"/>
+<text x="420" y="130" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" fill="#182230">competition_name</text>
+<line x1="520" y1="260" x2="620" y2="125" stroke="#555d68" stroke-width="1.7"/>
+<ellipse cx="620" cy="125" rx="94.5" ry="25" fill="white" stroke="#69717b" stroke-width="1.5"/>
+<text x="620" y="130" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" fill="#182230">competition_type</text>
+<line x1="520" y1="260" x2="820" y2="125" stroke="#555d68" stroke-width="1.7"/>
+<ellipse cx="820" cy="125" rx="52.5" ry="25" fill="white" stroke="#69717b" stroke-width="1.5"/>
+<text x="820" y="130" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" fill="#182230">country</text>
+<line x1="1320" y1="260" x2="1090" y2="125" stroke="#555d68" stroke-width="1.7"/>
+<ellipse cx="1090" cy="125" rx="59.5" ry="25" fill="white" stroke="#69717b" stroke-width="1.5"/>
+<text x="1090" y="130" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" text-decoration="underline" fill="#182230">season_id</text>
+<line x1="1320" y1="260" x2="1280" y2="125" stroke="#555d68" stroke-width="1.7"/>
+<ellipse cx="1280" cy="125" rx="74.5" ry="25" fill="white" stroke="#69717b" stroke-width="1.5"/>
+<text x="1280" y="130" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" fill="#182230">season_label</text>
+<line x1="1320" y1="260" x2="1470" y2="125" stroke="#555d68" stroke-width="1.7"/>
+<ellipse cx="1470" cy="125" rx="64.5" ry="25" fill="white" stroke="#69717b" stroke-width="1.5"/>
+<text x="1470" y="130" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" fill="#182230">start_date</text>
+<line x1="1320" y1="260" x2="1660" y2="125" stroke="#555d68" stroke-width="1.7"/>
+<ellipse cx="1660" cy="125" rx="54.5" ry="25" fill="white" stroke="#69717b" stroke-width="1.5"/>
+<text x="1660" y="130" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" fill="#182230">end_date</text>
+<line x1="2200" y1="260" x2="1990" y2="125" stroke="#555d68" stroke-width="1.7"/>
+<ellipse cx="1990" cy="125" rx="52.5" ry="25" fill="white" stroke="#69717b" stroke-width="1.5"/>
+<text x="1990" y="130" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" text-decoration="underline" fill="#182230">team_id</text>
+<line x1="2200" y1="260" x2="2200" y2="125" stroke="#555d68" stroke-width="1.7"/>
+<ellipse cx="2200" cy="125" rx="59.5" ry="25" fill="white" stroke="#69717b" stroke-width="1.5"/>
+<text x="2200" y="130" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" fill="#182230">team_name</text>
+<line x1="2200" y1="260" x2="2410" y2="125" stroke="#555d68" stroke-width="1.7"/>
+<ellipse cx="2410" cy="125" rx="52.5" ry="25" fill="white" stroke="#69717b" stroke-width="1.5"/>
+<text x="2410" y="130" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" fill="#182230">city</text>
+<line x1="1320" y1="670" x2="1050" y2="770" stroke="#555d68" stroke-width="1.7"/>
+<ellipse cx="1050" cy="770" rx="59.5" ry="25" fill="white" stroke="#69717b" stroke-width="1.5"/>
+<text x="1050" y="775" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" text-decoration="underline" fill="#182230">season_id</text>
+<line x1="1320" y1="670" x2="1590" y2="770" stroke="#555d68" stroke-width="1.7"/>
+<ellipse cx="1590" cy="770" rx="52.5" ry="25" fill="white" stroke="#69717b" stroke-width="1.5"/>
+<text x="1590" y="775" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" text-decoration="underline" fill="#182230">team_id</text>
+<line x1="2330" y1="670" x2="2000" y2="770" stroke="#555d68" stroke-width="1.7"/>
+<ellipse cx="2000" cy="770" rx="59.5" ry="25" fill="white" stroke="#69717b" stroke-width="1.5"/>
+<text x="2000" y="775" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" text-decoration="underline" fill="#182230">player_id</text>
+<line x1="2330" y1="670" x2="2600" y2="770" stroke="#555d68" stroke-width="1.7"/>
+<ellipse cx="2600" cy="770" rx="59.5" ry="25" fill="white" stroke="#69717b" stroke-width="1.5"/>
+<text x="2600" y="775" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" fill="#182230">full_name</text>
+<line x1="2330" y1="670" x2="2780" y2="770" stroke="#555d68" stroke-width="1.7"/>
+<ellipse cx="2780" cy="770" rx="54.5" ry="25" fill="white" stroke="#69717b" stroke-width="1.5"/>
+<text x="2780" y="775" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" fill="#182230">position</text>
+<line x1="1320" y1="1130" x2="800" y2="1290" stroke="#555d68" stroke-width="1.7"/>
+<ellipse cx="800" cy="1290" rx="54.5" ry="25" fill="white" stroke="#69717b" stroke-width="1.5"/>
+<text x="800" y="1295" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" text-decoration="underline" fill="#182230">match_id</text>
+<line x1="1320" y1="1130" x2="1060" y2="1290" stroke="#555d68" stroke-width="1.7"/>
+<ellipse cx="1060" cy="1290" rx="64.5" ry="25" fill="white" stroke="#69717b" stroke-width="1.5"/>
+<text x="1060" y="1295" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" fill="#182230">kickoff_at</text>
+<line x1="1320" y1="1130" x2="1320" y2="1290" stroke="#555d68" stroke-width="1.7"/>
+<ellipse cx="1320" cy="1290" rx="74.5" ry="25" fill="white" stroke="#69717b" stroke-width="1.5"/>
+<text x="1320" y="1295" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" fill="#182230">match_status</text>
+<line x1="1320" y1="1130" x2="800" y2="1395" stroke="#555d68" stroke-width="1.7"/>
+<ellipse cx="800" cy="1395" rx="64.5" ry="25" fill="white" stroke="#69717b" stroke-width="1.5"/>
+<text x="800" y="1400" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" fill="#182230">home_score</text>
+<line x1="1320" y1="1130" x2="1060" y2="1395" stroke="#555d68" stroke-width="1.7"/>
+<ellipse cx="1060" cy="1395" rx="64.5" ry="25" fill="white" stroke="#69717b" stroke-width="1.5"/>
+<text x="1060" y="1400" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" fill="#182230">away_score</text>
+<line x1="1320" y1="1130" x2="1320" y2="1395" stroke="#555d68" stroke-width="1.7"/>
+<ellipse cx="1320" cy="1395" rx="74.5" ry="25" fill="white" stroke="#69717b" stroke-width="1.5"/>
+<text x="1320" y="1400" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" fill="#182230">is_synthetic</text>
+<line x1="2330" y1="1130" x2="2040" y2="1290" stroke="#555d68" stroke-width="1.7"/>
+<ellipse cx="2040" cy="1290" rx="54.5" ry="25" fill="white" stroke="#69717b" stroke-width="1.5"/>
+<text x="2040" y="1295" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" text-decoration="underline" fill="#182230">match_id</text>
+<line x1="2330" y1="1130" x2="2330" y2="1290" stroke="#555d68" stroke-width="1.7"/>
+<ellipse cx="2330" cy="1290" rx="59.5" ry="25" fill="white" stroke="#69717b" stroke-width="1.5"/>
+<text x="2330" y="1295" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" text-decoration="underline" fill="#182230">player_id</text>
+<line x1="2330" y1="1130" x2="2620" y2="1290" stroke="#555d68" stroke-width="1.7"/>
+<ellipse cx="2620" cy="1290" rx="84.5" ry="25" fill="white" stroke="#69717b" stroke-width="1.5"/>
+<text x="2620" y="1295" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" fill="#182230">minutes_played</text>
+<line x1="2330" y1="1130" x2="2040" y2="1395" stroke="#555d68" stroke-width="1.7"/>
+<ellipse cx="2040" cy="1395" rx="52.5" ry="25" fill="white" stroke="#69717b" stroke-width="1.5"/>
+<text x="2040" y="1400" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" fill="#182230">goals</text>
+<line x1="2330" y1="1130" x2="2330" y2="1395" stroke="#555d68" stroke-width="1.7"/>
+<ellipse cx="2330" cy="1395" rx="52.5" ry="25" fill="white" stroke="#69717b" stroke-width="1.5"/>
+<text x="2330" y="1400" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" fill="#182230">assists</text>
+<line x1="2330" y1="1130" x2="2620" y2="1395" stroke="#555d68" stroke-width="1.7"/>
+<ellipse cx="2620" cy="1395" rx="74.5" ry="25" fill="white" stroke="#69717b" stroke-width="1.5"/>
+<text x="2620" y="1400" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" fill="#182230">is_synthetic</text>
+<rect x="245.0" y="621" width="170" height="58" fill="#f1f2f4" stroke="#4e5662" stroke-width="1.8"/>
+<text x="330" y="656" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" font-weight="700" fill="#172033">USERS</text>
+<rect x="417.5" y="231" width="205" height="58" fill="#f1f2f4" stroke="#4e5662" stroke-width="1.8"/>
+<text x="520" y="266" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" font-weight="700" fill="#172033">COMPETITIONS</text>
+<rect x="1232.5" y="231" width="175" height="58" fill="#f1f2f4" stroke="#4e5662" stroke-width="1.8"/>
+<text x="1320" y="266" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" font-weight="700" fill="#172033">SEASONS</text>
+<rect x="2120.0" y="231" width="160" height="58" fill="#f1f2f4" stroke="#4e5662" stroke-width="1.8"/>
+<text x="2200" y="266" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" font-weight="700" fill="#172033">TEAMS</text>
+<rect x="1210.0" y="641" width="220" height="58" fill="#f1f2f4" stroke="#4e5662" stroke-width="1.8"/>
+<text x="1320" y="676" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" font-weight="700" fill="#172033">SEASON_TEAMS</text>
+<rect x="2242.5" y="641" width="175" height="58" fill="#f1f2f4" stroke="#4e5662" stroke-width="1.8"/>
+<text x="2330" y="676" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" font-weight="700" fill="#172033">PLAYERS</text>
+<rect x="1230.0" y="1101" width="180" height="58" fill="#f1f2f4" stroke="#4e5662" stroke-width="1.8"/>
+<text x="1320" y="1136" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" font-weight="700" fill="#172033">MATCHES</text>
+<rect x="2210.0" y="1101" width="240" height="58" fill="#f1f2f4" stroke="#4e5662" stroke-width="1.8"/>
+<text x="2330" y="1136" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" font-weight="700" fill="#172033">PLAYER_MATCH_STATS</text>
+<polygon points="920,213 1025,260 920,307 815,260" fill="white" stroke="#525b66" stroke-width="1.8"/>
+<text x="920" y="265" text-anchor="middle" font-family="Arial,sans-serif" font-size="14" fill="#1e293b">HAS_SEASON</text>
+<polygon points="1320,413 1425,460 1320,507 1215,460" fill="white" stroke="#525b66" stroke-width="1.8"/>
+<text x="1320" y="465" text-anchor="middle" font-family="Arial,sans-serif" font-size="14" fill="#1e293b">CONTAINS_SEASON</text>
+<polygon points="1770,408 1875,455 1770,502 1665,455" fill="white" stroke="#525b66" stroke-width="1.8"/>
+<text x="1770" y="460" text-anchor="middle" font-family="Arial,sans-serif" font-size="14" fill="#1e293b">INCLUDES_TEAM</text>
+<polygon points="2300,408 2405,455 2300,502 2195,455" fill="white" stroke="#525b66" stroke-width="1.8"/>
+<text x="2300" y="460" text-anchor="middle" font-family="Arial,sans-serif" font-size="14" fill="#1e293b">HAS_PLAYER</text>
+<polygon points="1090,853 1195,900 1090,947 985,900" fill="white" stroke="#525b66" stroke-width="1.8"/>
+<text x="1090" y="905" text-anchor="middle" font-family="Arial,sans-serif" font-size="14" fill="#1e293b">HOME_TEAM</text>
+<polygon points="1550,853 1655,900 1550,947 1445,900" fill="white" stroke="#525b66" stroke-width="1.8"/>
+<text x="1550" y="905" text-anchor="middle" font-family="Arial,sans-serif" font-size="14" fill="#1e293b">AWAY_TEAM</text>
+<polygon points="2330,853 2435,900 2330,947 2225,900" fill="white" stroke="#525b66" stroke-width="1.8"/>
+<text x="2330" y="905" text-anchor="middle" font-family="Arial,sans-serif" font-size="14" fill="#1e293b">RECORDED_FOR</text>
+<polygon points="1830,1083 1935,1130 1830,1177 1725,1130" fill="white" stroke="#525b66" stroke-width="1.8"/>
+<text x="1830" y="1135" text-anchor="middle" font-family="Arial,sans-serif" font-size="14" fill="#1e293b">HAS_STATS</text>
+<text x="70" y="1450" font-family="Arial,sans-serif" font-size="15" fill="#475569">Underlined ovals identify keys. (min,max) labels show participation. Foreign keys in SQL correspond to relationships here; USERS is independent in Phase II.</text>
+<text x="70" y="1475" font-family="Arial,sans-serif" font-size="15" fill="#475569">Both HOME_TEAM and AWAY_TEAM memberships for one MATCH belong to the same SEASON; this is enforced by the composite foreign keys in the SQL schema.</text>
+</svg>
