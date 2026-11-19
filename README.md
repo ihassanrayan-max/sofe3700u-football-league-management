@@ -1,6 +1,6 @@
 # Football League Management and Statistics System
 
-SOFE 3700U Group 12 course project. This repository contains a MySQL database design and a local Flask web application for a six-club teaching subset of the 2025/26 English Premier League.
+SOFE 3700U Group 20 course project. This repository contains a MySQL database design and a local Flask web application for a six-club teaching subset of the 2025/26 English Premier League.
 
 The Phase II seed fixtures, scores, and player statistics are **fictional**. The Phase III administrator import uses football-data.org API v4 and marks imported matches separately. No API token, database password, demo password, or database dump is included.
 
