@@ -119,3 +119,29 @@ Five integration tests pass for page rendering and escaping, guest/reader permis
 Live database CRUD, real sign-in and provider import were not re-run for this redesign because this checkout has no configured `.env`. The earlier audit above is historical, not evidence of a new live database test. Follow the demonstration procedure against your configured database before the final presentation.
 
 The displayed group number is Group 20. The existing database remains named `group12_football_phase2`. `MYSQL_USER=group12` in .env.example is only a default, not evidence that a MySQL login exists. Use an existing authorized MySQL account. The web ADMIN account is separate from the MySQL connection account. `FOOTBALL_DATA_TOKEN` is optional for sign-in. Existing process environment variables take precedence over .env; use the intended values in the PowerShell session that launches Flask. Never rerun Phase II initialization scripts to repair a login.
+
+## Dark frontend redesign verification
+
+The dark redesign continues from local Git checkpoint `3e57147` on `phase3-redesign`. The checkpoint preserves the earlier Touchline implementation and Group 20 branding. No backend routes, authentication logic, SQL scripts, schema, database name, or dependency requirements were changed.
+
+### Frontend changes
+
+- Charcoal surfaces, emerald accents, restrained lime highlights, local stadium illustration, and local Touchline favicon across all five screens.
+- Overview spotlights use the latest completed result and earliest scheduled fixture returned by the existing report APIs. They are not live-match widgets. Fictional course fixtures remain labelled; no scores or player statistics are hardcoded into production screens.
+- Club comparison switches between points, goals scored, and goal difference from the selected season's standings. Negative goal differences use a muted red. Exact values remain available as text below the chart. Player bars use recorded goals and disclose partial player coverage.
+- Sorting keeps the league-leader highlight tied to league position rather than row order. Report/table selectors handle rapid changes; empty and failed requests have clearer messages. Results and fixtures load independently, so one failure does not suppress the other.
+- Keyboard focus, accessible sorting names, reduced-motion preferences, mobile navigation, and horizontally scrollable tables are retained.
+
+### Checks completed for this redesign
+
+- `python -m unittest discover -s tests -v`: **10 tests passed**, covering five page templates, escaping, Group 20 branding, guest/reader access, anonymous/CSRF guards, all ten JSON report contracts, filtered exports, missing provider token, preview-before-save, and rejection of duplicate provider IDs. SQL and provider calls are mocked in the regression suite; it does not write to MySQL.
+- `node --check static/ui.js`: passed.
+- Read-only integration against the configured MySQL database: **all ten reports returned JSON and generated CSV/PDF**, all eight record-list endpoints returned successfully, import history loaded, and the five templates rendered. Authentication was supplied only inside the test client; no live sign-in/session creation occurred.
+- Browser review used an isolated, GET-only localhost QA server serving captured responses from those actual database reads. No synthetic replacement dataset was added to the application. Captures and QA helpers stay in ignored `work/`.
+- Desktop review at 1440px and mobile review at 390px and 320px covered Overview, Login, Report Studio, Data Workbench and Fixture Imports. No page-level horizontal overflow was found; wide tables scroll within their containers. Chart switching, fixture search, report filtering/deep links, export query links, numeric sorting, all eight editor field sets, guest UI restrictions and disabled-before-preview import saving were checked. No browser console errors appeared during the reviewed dashboard interactions.
+
+### Remaining manual verification
+
+Live sign-in/logout, successful create/update/delete transactions, and a real provider preview/save cycle were deliberately not executed because they write sessions or database records. The configured provider token was absent during this review. Missing-token and duplicate/preview protections passed isolated tests, but that does not establish live API access. Recheck those write workflows with the group's approval before the presentation. Browser export links were checked; actual report export responses were tested separately through Flask against read-only MySQL queries.
+
+Restart the normal Flask process if it caches templates, then hard-refresh the browser to load the latest CSS and JavaScript. Use the existing Windows setup above; do not run the Phase II initialization scripts.

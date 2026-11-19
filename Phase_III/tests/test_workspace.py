@@ -67,5 +67,43 @@ class WorkspaceTests(unittest.TestCase):
                 if fmt=='csv': self.assertIn(b'Arsenal,7', response.data)
                 if fmt=='pdf': self.assertTrue(response.data.startswith(b'%PDF'))
 
+    def test_group_branding_and_dashboard_contract(self):
+        response=self.client.get('/')
+        for marker in [b'GROUP 20', b'id="featured-match"', b'id="fixture-spotlight"', b'id="chart-measure"', b'id="chart-summary"']:
+            self.assertIn(marker,response.data)
+        self.assertNotIn(b'GROUP 12',response.data)
+        self.assertNotIn(b'Live match',response.data)
+
+    def test_all_ten_report_routes_keep_json_contract(self):
+        with patch.object(services,'sql',side_effect=lambda stmt,args=(): [{'Field':'match_id'}] if stmt.startswith('SHOW') else []):
+            for view in core.VIEWS:
+                response=self.client.get('/api/reports/'+view)
+                self.assertEqual(response.status_code,200)
+                self.assertEqual(response.json,{'columns':['match_id'],'rows':[]})
+
+    def test_missing_provider_token_is_actionable(self):
+        with patch.dict(core.os.environ,{'FOOTBALL_DATA_TOKEN':''}), patch.object(services,'urlopen') as provider:
+            response=self.client.post('/api/import/preview',json={},headers={'X-CSRF-Token':'test'})
+            self.assertEqual(response.status_code,503)
+            self.assertIn('FOOTBALL_DATA_TOKEN',response.json['error'])
+            provider.assert_not_called()
+
+    def test_import_save_requires_matching_preview(self):
+        with patch.object(services,'fetch_matches',return_value=([{'external_id':1}],0)), patch.object(services,'db') as connection:
+            response=self.client.post('/api/import/save',json={},headers={'X-CSRF-Token':'test'})
+            self.assertEqual(response.status_code,409)
+            connection.assert_not_called()
+
+    def test_duplicate_provider_ids_are_rejected(self):
+        from io import BytesIO
+        import json
+        fixture={'id':1,'homeTeam':{'id':57},'awayTeam':{'id':61},
+                 'competition':{'code':'PL'},'season':{'startDate':'2025-08-01'},
+                 'status':'SCHEDULED','utcDate':'2025-09-06T15:00:00Z'}
+        with patch.dict(core.os.environ,{'FOOTBALL_DATA_TOKEN':'unit-test-placeholder'}), patch.object(services,'urlopen',return_value=BytesIO(json.dumps({'matches':[fixture,fixture]}).encode())):
+            response=self.client.post('/api/import/preview',json={},headers={'X-CSRF-Token':'test'})
+            self.assertEqual(response.status_code,502)
+            self.assertIn('duplicate',response.json['error'])
+
 if __name__ == '__main__':
     unittest.main()
