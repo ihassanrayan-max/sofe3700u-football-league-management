@@ -1,5 +1,6 @@
 """Frontend integration checks. No database connections or writes are made."""
 import unittest
+import tempfile
 from unittest.mock import patch
 import sys
 from pathlib import Path
@@ -9,6 +10,13 @@ import services
 
 class WorkspaceTests(unittest.TestCase):
     def setUp(self):
+        self.mode=patch.dict(core.os.environ,{'TOUCHLINE_PROVIDER':'api-football'})
+        self.mode.start();self.addCleanup(self.mode.stop)
+        # Every route test gets a real, isolated cache; never touch the local quota ledger.
+        temporary=tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.cache=services.af.Cache(Path(temporary.name)/'api-football.sqlite3')
+        self.enterContext(patch.object(services.af,'Cache',return_value=self.cache))
         self.client = core.app.test_client()
         self.role = 'ADMIN'
         self.auth = patch.object(core, 'sql', side_effect=lambda *args: [{'user_id': 1, 'display_name': 'Test <Admin>', 'role': self.role}])
@@ -82,11 +90,38 @@ class WorkspaceTests(unittest.TestCase):
                 self.assertEqual(response.json,{'columns':['match_id'],'rows':[]})
 
     def test_missing_provider_token_is_actionable(self):
-        with patch.dict(core.os.environ,{'FOOTBALL_DATA_TOKEN':''}), patch.object(services,'urlopen') as provider:
-            response=self.client.post('/api/import/preview',json={},headers={'X-CSRF-Token':'test'})
-            self.assertEqual(response.status_code,503)
-            self.assertIn('FOOTBALL_DATA_TOKEN',response.json['error'])
+        with patch.dict(core.os.environ,{'API_FOOTBALL_KEY':''}), patch.object(services.af,'urlopen') as provider, patch.object(self.cache,'reserve') as reserve:
+            for state in ('absent','expired'):
+                with self.subTest(cache=state):
+                    if state=='expired':
+                        self.cache.put('fixtures?league=39&season=2023',{'response':[]},ttl=-1)
+                    response=self.client.post('/api/import/preview',json={},headers={'X-CSRF-Token':'test'})
+                    self.assertEqual(response.status_code,503)
+                    self.assertIn('API_FOOTBALL_KEY',response.json['error'])
+                    self.assertIn('restart Flask',response.json['error'])
             provider.assert_not_called()
+            reserve.assert_not_called()
+
+    def test_missing_provider_token_preserves_valid_cached_preview(self):
+        fixture={'league':{'id':39,'season':2023},
+                 'fixture':{'id':123,'date':'2023-09-01T15:00:00Z','status':{'short':'FT'}},
+                 'teams':{'home':{'id':42},'away':{'id':49}},'goals':{'home':2,'away':1}}
+        payload={'errors':[],'results':1,'paging':{'current':1,'total':1},'response':[fixture]}
+        self.cache.put('fixtures?league=39&season=2023',payload)
+        with patch.dict(core.os.environ,{'API_FOOTBALL_KEY':''}), patch.object(services.af,'urlopen') as provider, patch.object(self.cache,'reserve') as reserve:
+            response=self.client.post('/api/import/preview',json={},headers={'X-CSRF-Token':'test'})
+            self.assertEqual(response.status_code,200)
+            self.assertEqual(response.json['skipped'],0)
+            self.assertEqual(len(response.json['rows']),1)
+            row=response.json['rows'][0]
+            self.assertEqual((row['external_id'],row['home_team'],row['away_team'],row['home_score'],row['away_score']),
+                             (123,'Arsenal','Chelsea',2,1))
+            digest=response.json['preview_id']
+            self.assertEqual(self.cache.get('preview:'+digest),{'fixtures':response.json['rows']})
+            with self.client.session_transaction() as session:
+                self.assertEqual(session['api_football_preview'],digest)
+            provider.assert_not_called()
+            reserve.assert_not_called()
 
     def test_import_save_requires_matching_preview(self):
         with patch.object(services,'fetch_matches',return_value=([{'external_id':1}],0)), patch.object(services,'db') as connection:
@@ -101,9 +136,12 @@ class WorkspaceTests(unittest.TestCase):
                  'competition':{'code':'PL'},'season':{'startDate':'2025-08-01'},
                  'status':'SCHEDULED','utcDate':'2025-09-06T15:00:00Z'}
         with patch.dict(core.os.environ,{'FOOTBALL_DATA_TOKEN':'unit-test-placeholder'}), patch.object(services,'urlopen',return_value=BytesIO(json.dumps({'matches':[fixture,fixture]}).encode())):
-            response=self.client.post('/api/import/preview',json={},headers={'X-CSRF-Token':'test'})
-            self.assertEqual(response.status_code,502)
-            self.assertIn('duplicate',response.json['error'])
+            with core.app.test_request_context():
+                from werkzeug.exceptions import HTTPException
+                with self.assertRaises(HTTPException) as caught:
+                    services.fetch_matches()
+                self.assertEqual(caught.exception.code,502)
+                self.assertIn('duplicate',caught.exception.description)
 
 if __name__ == '__main__':
     unittest.main()

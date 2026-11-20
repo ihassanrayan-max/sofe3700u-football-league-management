@@ -63,9 +63,11 @@ if($('entity')){
   run(refresh)();
 }
 if($('preview')){
-  async function history(){try{const rows=await api('/api/import/history');grid('history',Object.keys(rows[0]||{external_id:0,match_id:0}),rows);}catch(e){$('history').replaceChildren(el('p','Saved imports unavailable. Reload to retry.'));throw e;}}
-  $('preview').onclick=run(async()=>{$('commit').disabled=true;$('grid').replaceChildren(el('p','Fetching eligible provider fixtures…'));let d;try{d=await api('/api/import/preview','POST',{});}catch(e){$('grid').replaceChildren(el('p','Preview unavailable. Check the message above, then fetch again.'));throw e;}grid('grid',Object.keys(d.rows[0]||{}),d.rows);$('commit').disabled=!d.rows.length;say(d.rows.length+' eligible fixtures. '+d.skipped+' incomplete or unsupported records skipped.');});
-  $('commit').onclick=async()=>{$('commit').disabled=true;$('preview').disabled=true;try{const d=await api('/api/import/save','POST',{});await history();say('Saved '+d.saved+' fixtures. Fetch a new preview to import again.');}catch(e){say(e.message+' Fetch a new preview to retry.');}finally{$('preview').disabled=false;}};run(history)();
+  let previewId=null,previewVersion=0;
+  async function history(){try{const rows=await api('/api/import/history');grid('history',Object.keys(rows[0]||{external_id:0,match_id:0}),rows,(td,row)=>{if(!cfg.api_football)return;const button=el('button','Team statistics');td.append(button);button.onclick=run(async()=>{const version=++previewVersion;previewId=null;$('commit').disabled=true;const stats=await api('/api/import/statistics?match_id='+row.match_id);if(version!==previewVersion)return;grid('grid',['team','statistic','value'],stats);$('commit').disabled=true;say('Saved provider statistics. A dash means unknown; an empty table means coverage has not been imported or was unavailable.');});});}catch(e){$('history').replaceChildren(el('p','Saved imports unavailable. Reload to retry.'));throw e;}}
+  $('preview').onclick=run(async()=>{const version=++previewVersion;previewId=null;$('commit').disabled=true;$('grid').replaceChildren(el('p','Fetching eligible provider fixtures…'));let d;try{d=await api('/api/import/preview','POST',{kind:$('import-kind')?.value||'fixtures'});}catch(e){$('grid').replaceChildren(el('p','Preview unavailable. Check the message above, then fetch again.'));throw e;}if(version!==previewVersion)return;previewId=d.preview_id;grid('grid',Object.keys(d.rows[0]||{}),d.rows);$('commit').disabled=!d.rows.length;say(d.rows.length+' eligible fixtures. '+d.skipped+' incomplete or unsupported records skipped.');});
+  if($('import-kind'))$('import-kind').onchange=()=>{previewVersion++;previewId=null;$('commit').disabled=true;};
+  $('commit').onclick=async()=>{$('commit').disabled=true;$('preview').disabled=true;try{const d=await api('/api/import/save','POST',cfg.api_football?{preview_id:previewId}:{});await history();say('Saved '+d.saved+' fixtures. Fetch a new preview to import again.');}catch(e){say(e.message+' Fetch a new preview to retry.');}finally{$('preview').disabled=false;}};run(history)();
 }
 // Dashboard projections use only successfully returned report rows.
 function kickoff(value) {
@@ -116,7 +118,7 @@ if(location.pathname==='/') {
       const scoreboard=el('div');scoreboard.className='scoreboard';
       const score=el('strong',row.home_score+' : '+row.away_score);score.className='score';
       scoreboard.append(club(row.home_team),score,club(row.away_team));
-      const source=el('p',origin(row)+' · All recorded seasons');source.className='featured-source';
+      const source=el('p',origin(row)+' · '+(cfg.api_football?'EPL '+cfg.active_season+' · six-club subset':'All recorded seasons'));source.className='featured-source';
       $(target).append(date,scoreboard,source);
     } else {
       const date=el('p',kickoff(row.kickoff_at));date.className='fixture-date';
@@ -188,7 +190,7 @@ if(location.pathname==='/') {
     });
     api('/api/reports/v_player_totals').then(data=>{
       $('leaders').replaceChildren();
-      const rows=[...data.rows].sort((a,b)=>b.recorded_goals-a.recorded_goals||a.player_id-b.player_id).slice(0,5);
+      const rows=data.rows.filter(row=>row.recorded_goals!==null).sort((a,b)=>b.recorded_goals-a.recorded_goals||a.player_id-b.player_id).slice(0,5);
       const max=Math.max(1,...rows.map(row=>Number(row.recorded_goals)));
       for(const [i,row] of rows.entries()) {
         const line=el('div');line.className='leader';
@@ -198,7 +200,7 @@ if(location.pathname==='/') {
         const fill=el('span');fill.style.width=(Number(row.recorded_goals)/max*100)+'%';meter.append(fill);player.append(meter);
         line.append(rank,player,el('b',row.recorded_goals));$('leaders').append(line);
       }
-      if(!rows.length)message('leaders','No recorded players yet.');
+      if(!rows.length)message('leaders','No known player totals yet. Import player statistics to populate this panel.');
     }).catch(error=>{message('leaders','Player totals unavailable. Reload to retry.',true);say(error.message);});
   }
 }

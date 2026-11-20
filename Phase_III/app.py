@@ -4,6 +4,7 @@ import json
 import os
 import re
 import secrets
+import sys
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 from urllib.request import Request, urlopen
@@ -39,6 +40,12 @@ GUEST = [VIEWS[7],VIEWS[8]]
 OPTIONS = {'role':['ADMIN','USER','GUEST'],'position':['GK','DEF','MID','FWD'],
            'match_status':['SCHEDULED','COMPLETED'],'competition_type':['LEAGUE','CUP']}
 CLUBS = {57:'Arsenal',61:'Chelsea',64:'Liverpool',65:'Manchester City',66:'Manchester United',73:'Tottenham Hotspur'}
+
+def api_football_enabled():
+    provider=os.getenv('TOUCHLINE_PROVIDER','football-data.org')
+    if provider not in ('football-data.org','api-football'):
+        abort(503,'TOUCHLINE_PROVIDER must be football-data.org or api-football.')
+    return provider=='api-football'
 
 def db():
     if 'db' not in g:
@@ -94,7 +101,8 @@ def protect():
 def page():
     return render_template('page.html',path=request.path,csrf=session.setdefault('csrf',secrets.token_hex(24)),
         user=g.get('user',{}),views=GUEST if g.get('user',{}).get('role')=='GUEST' else VIEWS,
-        fields=FIELDS,keys=KEYS,options=OPTIONS)
+        fields=FIELDS,keys=KEYS,options=OPTIONS,api_football_enabled=api_football_enabled(),
+        active_season='2023/24' if api_football_enabled() else '2025/26')
 
 def body():
     data=request.get_json(silent=True)
@@ -136,6 +144,45 @@ def demo():
         created.append((email,pw))
     db().commit()
     for email,pw in created: click.echo(f'{email}  {pw}')
+
+@app.cli.command('reset-demo-passwords')
+def reset_demo_passwords():
+    """Reset only the three existing demo credentials; display passwords once."""
+    if not sys.stdout.isatty():
+        raise click.ClickException('Run in an interactive local terminal; do not redirect output.')
+    targets=[('admin.one@example.com','ADMIN'),
+             ('reader.one@example.com','USER'),
+             ('guest.one@example.com','GUEST')]
+    generated=[]
+    try:
+        # Lock and validate all targets before changing any hash.
+        accounts=[]
+        for email,role in targets:
+            rows=sql('SELECT u.user_id,u.role FROM users u JOIN login_credentials lc USING(user_id) WHERE u.email=%s FOR UPDATE',[email])
+            if len(rows)!=1 or rows[0]['role']!=role:
+                raise click.ClickException('Expected existing user, role and credential not found: '+email)
+            accounts.append((email,rows[0]['user_id']))
+        used=set()
+        for email,uid in accounts:
+            password=secrets.token_urlsafe(24)
+            while password in used:
+                password=secrets.token_urlsafe(24)
+            used.add(password)
+            password_hash=generate_password_hash(password)
+            sql('UPDATE login_credentials SET password_hash=%s WHERE user_id=%s',[password_hash,uid])
+            saved=sql('SELECT password_hash FROM login_credentials WHERE user_id=%s',[uid])
+            if len(saved)!=1 or not check_password_hash(saved[0]['password_hash'],password):
+                raise click.ClickException('Password verification failed; reset cancelled.')
+            generated.append((email,password))
+        db().commit()
+    except Exception:
+        db().rollback()
+        # Never print database exceptions: drivers can include query parameters.
+        raise click.ClickException('Reset did not complete. Verify the three existing accounts and database access. No passwords will be displayed.') from None
+    click.echo('All three passwords were reset. Save these privately; they are shown only here:')
+    for email,password in generated:
+        click.echo(email+'  '+password)
+
 
 def validate(table,d,create):
     allowed=set(FIELDS[table]) | ({'password'} if table=='users' else set())
@@ -195,6 +242,8 @@ def records(table,key=None):
         return jsonify(clean(rows))
     if key and not sql('SELECT '+keys[0]+' FROM '+table+where+' FOR UPDATE',ids): abort(404,'Record does not exist.')
     if key and table=='matches' and sql('SELECT match_id FROM imported_matches WHERE match_id=%s',ids):
+        abort(409,'Imported matches are maintained by the provider.')
+    if key and table=='matches' and api_football_enabled() and sql('SELECT match_id FROM provider_matches WHERE match_id=%s',ids):
         abort(409,'Imported matches are maintained by the provider.')
     if request.method=='DELETE':
         if table=='users' and int(ids[0])==session['uid']: abort(409,'You cannot delete your own account.')

@@ -8,3 +8,22 @@
 **/*.log
 **/*.zip
 **/work/
+
+# Private backups, database/cache files, credentials and session artifacts
+**/Touchline_Backups/
+**/backups/
+**/backup/
+**/*_backup*.sql
+**/*_before_api_football*.sql
+**/*.dump
+**/*.sql.gz
+**/*.sqlite*
+**/*.db
+**/*.db-*
+**/flask_session/
+**/.my.cnf
+**/.mylogin.cnf
+**/*.pem
+**/*.key
+**/credentials.json
+**/credentials.local.*
