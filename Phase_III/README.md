@@ -1,5 +1,15 @@
 # Touchline | Group 20
 
+## Current role permissions
+
+- **ADMIN:** existing Overview, ten reports and JSON/CSV/PDF exports, Data Workbench CRUD and Fixture Imports remain available.
+- **USER (Reader):** existing analytics Overview, ten reports and JSON/CSV/PDF exports remain available; CRUD and imports remain ADMIN-only.
+- **GUEST:** only Overview's read-only six-team directory. Search by team name and filter by city using GET forms. No match results, player data, standings, charts, statistics or report links are rendered. Restricted webpages return an HTML access-denied page with HTTP 403; restricted API requests return JSON HTTP 403 before their handlers run. Login/logout and session checks remain functional.
+
+`GET /api/teams?q=...&city=...` is authenticated and exposes only `team_id`, `team_name` and `city` for the six project clubs. Search/filter values are bound SQL parameters. Unknown parameters, including export formats, are rejected; the endpoint supports no writes. Directory rows and city choices come from MySQL, not mock UI data. The guest page uses a dedicated sign-out script and does not load the analytics scripts. Older audit notes below describe historical guest permissions and are superseded by this section.
+
+Authorization regression coverage exercises direct page URLs, every report/export combination, every CRUD entity and method, import endpoints, directory filtering/field restrictions, expired sessions and login/logout. Validation uses mocked MySQL access and an in-memory test team table; no production records or schema are changed. Final validation passed 61 tests and syntax checks for all three JavaScript files. Additional checks cover alternate HTTP methods, forged role claims, basic-field projection, and absence of hidden guest analytics/configuration. Live three-role browser verification was not repeated: the connected browser had no authenticated sessions, and signing in would write session rows. The owner reported successful manual Guest testing. No football API calls or live database writes were made during final validation.
+
 ## API-Football 2023/24 integration
 
 ### Current deployment status — reported by the project owner
@@ -62,7 +72,7 @@ Provider contracts: [official API-Football v3 documentation](https://www.api-foo
 
 ### Verification for this change
 
-Current offline result: **48 tests passed**; `node --check static/ui.js` passed. Run `python -m unittest discover -s tests -v` from Phase_III and `node --check static/ui.js`. Tests use isolated provider responses, mock MySQL operations and temporary SQLite cache files. Workspace route tests isolate their cache from the local application ledger: a missing key with absent/expired cache returns an actionable 503, while a valid cached fixture response still produces a successful preview without network access or quota reservation. They do not connect to or alter MySQL and do not consume API quota. They cover parsing, null/zero stats, namespace/club mapping, cross-provider matching, repeated imports, transaction rollback, quota/caching, all ten report routes, permissions, templates and CSV/PDF signatures. Live API access, migration execution, SQL-view results against MySQL and post-migration browser workflows remain unverified until approved. Historical audit results below concern earlier versions, not this provider switch.
+Current offline result: **61 tests passed**; `node --check static/ui.js` passed. Run `python -m unittest discover -s tests -v` from Phase_III and `node --check static/ui.js`. Tests use isolated provider responses, mock MySQL operations and temporary SQLite cache files. Workspace route tests isolate their cache from the local application ledger: a missing key with absent/expired cache returns an actionable 503, while a valid cached fixture response still produces a successful preview without network access or quota reservation. They do not connect to or alter MySQL and do not consume API quota. They cover parsing, null/zero stats, namespace/club mapping, cross-provider matching, repeated imports, transaction rollback, quota/caching, all ten report routes, permissions, templates and CSV/PDF signatures. Live API access, migration execution, SQL-view results against MySQL and post-migration browser workflows remain unverified until approved. Historical audit results below concern earlier versions, not this provider switch.
 
 ## Historical setup and audit notes (football-data.org mode)
 

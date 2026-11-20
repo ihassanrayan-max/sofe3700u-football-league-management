@@ -37,13 +37,12 @@ class WorkspaceTests(unittest.TestCase):
 
     def test_guest_sees_only_permitted_features(self):
         self.role = 'GUEST'
-        home = self.client.get('/').data
-        self.assertIn(b'Match centre', home)
-        for forbidden in [b'id="chart"', b'href="/manage"', b'href="/import"']:
+        with patch.object(core,'sql',side_effect=lambda query,args=(): [{'user_id':1,'display_name':'Guest','role':'GUEST'}] if 'web_sessions' in query else []):
+            home = self.client.get('/').data
+        self.assertIn(b'Team directory', home)
+        for forbidden in [b'id="chart"', b'href="/manage"', b'href="/import"',b'href="/reports',b'Match centre',b'/static/ui.js']:
             self.assertNotIn(forbidden, home)
-        report = self.client.get('/reports').data
-        self.assertNotIn(b'id="csv"', report)
-        self.assertNotIn(b'value="v_league_standings"', report)
+        self.assertEqual(self.client.get('/reports').status_code,403)
         self.assertEqual(self.client.get('/manage').status_code, 403)
         self.assertEqual(self.client.get('/api/reports/v_league_standings').status_code, 403)
 

@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#0b1012"><title>Touchline · Team directory</title><link rel="icon" href="/static/touchline.svg" type="image/svg+xml"><link rel="stylesheet" href="/static/style.css"></head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<aside class="sidebar">
+  <a class="brand" href="/" aria-label="Touchline home"><span class="brand-mark">t<span>●</span></span><span>touchline<small>TEAM DIRECTORY</small></span></a>
+  <span class="nav-label">WORKSPACE</span><nav aria-label="Main navigation"><a href="/" aria-current="page">Overview</a></nav>
+  <div class="sidebar-bottom"><div class="profile"><span class="avatar">{{ user.display_name[:1] }}</span><div><strong>{{ user.display_name }}</strong><small>Guest account</small></div></div><button id="logout" class="quiet">Sign out</button></div>
+</aside>
+<div class="workspace"><header class="topbar"><span>League workspace / Overview</span><span class="edition">SOFE 3700U <b>GROUP 20</b></span></header>
+<main id="main">
+  <div class="page-heading"><div><span class="eyebrow">MEET THE CLUBS</span><h1>Team directory.</h1><p>Browse the six project clubs by name and city.</p></div></div>
+  <p id="feedback" role="status" aria-live="polite"></p>
+  <section class="panel" aria-label="Project teams">
+    <form action="/" method="get" class="controls">
+      <label>Team name<input name="q" type="search" maxlength="100" value="{{ q }}" placeholder="Search team names"></label>
+      <label>City<select name="city"><option value="">All cities</option>{% for value in cities %}<option value="{{ value }}" {% if city==value %}selected{% endif %}>{{ value }}</option>{% endfor %}{% if city and city not in cities %}<option value="{{ city }}" selected>{{ city }}</option>{% endif %}</select></label>
+      <button class="primary" type="submit">Search teams</button><a href="/" class="secondary">Clear filters</a>
+    </form>
+    {% if teams %}<div class="scroll" tabindex="0" role="region" aria-label="Team directory table"><table><thead><tr><th scope="col">Team ID</th><th scope="col">Team name</th><th scope="col">City</th></tr></thead><tbody>{% for team in teams %}<tr><td>{{ team.team_id }}</td><td>{{ team.team_name }}</td><td>{{ team.city }}</td></tr>{% endfor %}</tbody></table></div>
+    {% else %}<p class="empty">No teams found. Try another name or city, or clear the filters.</p>{% endif %}
+  </section>
+  <footer><span><strong>touchline</strong> · SOFE 3700U / Group 20</span><span>Read-only team directory</span></footer>
+</main></div>
+<script id="config" type="application/json">{{ dict(csrf=csrf)|tojson }}</script><script src="/static/guest.js"></script>
+</body></html>

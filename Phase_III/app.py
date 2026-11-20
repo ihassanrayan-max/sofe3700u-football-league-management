@@ -36,7 +36,7 @@ FIELDS = {k:v.split() for k,v in {
     'player_match_stats':'match_id player_id minutes_played goals assists'}.items()}
 KEYS = {t: fields[:2 if t in ('season_teams','player_match_stats') else 1] for t,fields in FIELDS.items()}
 VIEWS = ['v_'+x for x in 'match_details above_any_team_goal_total players_with_goals match_stat_coverage goal_or_assist_players league_standings player_totals match_results scheduled_fixtures team_home_away'.split()]
-GUEST = [VIEWS[7],VIEWS[8]]
+GUEST = []  # Guests have no report access, including JSON, CSV and PDF.
 OPTIONS = {'role':['ADMIN','USER','GUEST'],'position':['GK','DEF','MID','FWD'],
            'match_status':['SCHEDULED','COMPLETED'],'competition_type':['LEAGUE','CUP']}
 CLUBS = {57:'Arsenal',61:'Chelsea',64:'Liverpool',65:'Manchester City',66:'Manchester United',73:'Tottenham Hotspur'}
@@ -81,7 +81,7 @@ def failure(e):
 def protect():
     if request.method in ('POST','PUT','DELETE') and (not session.get('csrf') or request.headers.get('X-CSRF-Token') != session['csrf']):
         abort(403,'Reload the page before submitting.')
-    if request.endpoint in ('records','reports','imports','page') and request.path != '/login':
+    if request.endpoint not in (None,'static','login','logout') and request.path != '/login':
         if 'uid' not in session:
             if request.endpoint=='page':
                 from flask import redirect
@@ -90,6 +90,13 @@ def protect():
         u=sql('SELECT user_id,display_name,role FROM users JOIN web_sessions USING(user_id) WHERE user_id=%s AND session_id=%s AND expires_at>UTC_TIMESTAMP()',[session['uid'],session.get('sid')])
         if not u: session.clear(); abort(401,'Please sign in again.')
         g.user=u[0]
+        if g.user['role']=='GUEST' and not (
+            request.method in ('GET','HEAD') and
+            (request.endpoint=='team_directory' or (request.endpoint=='page' and request.path=='/'))
+        ):
+            if request.endpoint=='page':
+                return render_template('access_denied.html'),403
+            abort(403,'Guest access is limited to the team directory.')
         if (request.endpoint in ('records','imports') or request.path in ('/manage','/import')) and g.user['role']!='ADMIN':
             abort(403,'Administrator access required.')
 
@@ -99,10 +106,37 @@ def protect():
 @app.get('/manage')
 @app.get('/import')
 def page():
+    if request.path=='/' and g.user['role']=='GUEST':
+        rows=directory_rows()
+        cities=sql('SELECT DISTINCT city FROM teams WHERE team_name IN ('+','.join(['%s']*len(CLUBS))+') ORDER BY city',list(CLUBS.values()))
+        return render_template('guest.html',user=g.user,teams=rows,cities=[r['city'] for r in cities],
+            q=request.args.get('q','').strip(),city=request.args.get('city','').strip(),
+            csrf=session.setdefault('csrf',secrets.token_hex(24)))
     return render_template('page.html',path=request.path,csrf=session.setdefault('csrf',secrets.token_hex(24)),
         user=g.get('user',{}),views=GUEST if g.get('user',{}).get('role')=='GUEST' else VIEWS,
         fields=FIELDS,keys=KEYS,options=OPTIONS,api_football_enabled=api_football_enabled(),
         active_season='2023/24' if api_football_enabled() else '2025/26')
+
+def directory_rows():
+    if set(request.args)-{'q','city'}:
+        abort(400,'Only team name and city filters are supported.')
+    q=request.args.get('q','').strip()
+    city=request.args.get('city','').strip()
+    if len(q)>100 or len(city)>80: abort(400,'Team name or city filter is too long.')
+    statement='SELECT team_id,team_name,city FROM teams WHERE team_name IN ('+','.join(['%s']*len(CLUBS))+')'
+    args=list(CLUBS.values())
+    if q:
+        statement+=' AND LOCATE(%s,team_name)>0'
+        args.append(q)
+    if city:
+        statement+=' AND city=%s'
+        args.append(city)
+    rows=sql(statement+' ORDER BY team_name,team_id',args)
+    return [{key:row[key] for key in ('team_id','team_name','city')} for row in rows]
+
+@app.get('/api/teams')
+def team_directory():
+    return jsonify(directory_rows())
 
 def body():
     data=request.get_json(silent=True)
