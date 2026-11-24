@@ -187,8 +187,12 @@ CREATE SQL SECURITY INVOKER VIEW tl_v_player_totals AS
 SELECT p.player_id, p.full_name, t.team_name, p.position,
        COUNT(s.match_id) AS recorded_appearances,
        COALESCE(SUM(s.minutes_played), 0) AS recorded_minutes,
-       CASE WHEN COUNT(s.goals)=COUNT(s.match_id) THEN SUM(s.goals) END AS recorded_goals,
-       CASE WHEN COUNT(s.assists)=COUNT(s.match_id) THEN SUM(s.assists) END AS recorded_assists
+       SUM(s.goals) AS recorded_goals,
+       SUM(s.assists) AS recorded_assists,
+       COUNT(s.goals) AS known_goal_appearances,
+       COUNT(s.match_id)-COUNT(s.goals) AS unknown_goal_appearances,
+       COUNT(s.assists) AS known_assist_appearances,
+       COUNT(s.match_id)-COUNT(s.assists) AS unknown_assist_appearances
 FROM tl_players AS p
 JOIN teams AS t ON t.team_id = p.team_id
 LEFT JOIN tl_player_match_stats AS s ON s.player_id = p.player_id

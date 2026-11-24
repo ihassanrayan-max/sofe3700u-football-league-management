@@ -333,3 +333,5 @@ label{font-size:14px}
 .source,.match-card>.source{font-size:11px}
 .metric small{font-size:12px}
 .fixture-date{font-size:14px}
+
+.stat-coverage{display:block;max-width:22rem;white-space:normal;color:var(--muted);font-size:.75rem;margin-top:.3rem}

@@ -285,3 +285,45 @@ Writes require the session CSRF token in `X-CSRF-Token`; the interface supplies 
 | Old design or configuration | Restart Flask, hard-refresh, and check process variables overriding .env. |
 
 Keep API keys, passwords, database dumps, generated credentials, and cache files out of Git. Another contributor's successful migration or import does not establish the state of your own installation.
+
+### Known player subtotals (migration 07)
+
+Player Totals and Recorded goal leaders sum available numeric statistics across
+qualifying imported appearances. SQL SUM ignores NULL but leaves all-NULL groups
+NULL; explicit zero remains zero. Goal and assist coverage are independent.
+Complete observed coverage means all qualifying imported appearances have a
+numeric value, not that the full season has been enriched. CSV includes the four
+coverage columns; PDF includes those columns and a partial-season explanation.
+
+For an existing database, apply only migration 07, not migration 06:
+1. Keep a current private backup and pause imports/manual edits while comparing
+   preflight and verification results. Finish any open Workbench transaction.
+2. Connect in MySQL Workbench using an authorized account. Set
+   group12_football_phase2 as the default schema.
+3. Open and run 07_player_totals_preflight.sql. Require database_matches=1,
+   MySQL 8, the four expected views, and no duplicate appearance keys.
+   Review the existing view definition and save the counts for comparison.
+   The account needs CREATE VIEW, DROP on the targeted view, and SELECT on its
+   dependencies. If permissions are missing, stop and ask the database owner;
+   do not broaden the Flask account privileges.
+4. Open 07_player_totals.sql, review it, then execute that file alone.
+   Its only schema change is CREATE OR REPLACE of tl_v_player_totals with
+   SQL SECURITY INVOKER. It is repeatable and implicitly commits; it does not
+   insert, update, delete, or rebuild table records or original Phase II views.
+5. Run 07_player_totals_verify.sql. Require zero mismatch rows, unchanged
+   source counts/sums, and all ten original views. Review partial subtotals.
+6. Restart Flask for the updated export text and hard-refresh the browser.
+   Check Player Totals, its CSV/PDF exports, and Recorded goal leaders.
+   Unknown totals should remain blank in exports and a dash on screen.
+   Guest report access must still return 403.
+
+Migration 07 has not been executed automatically. Fresh installations use the
+updated canonical view in 06_api_football.sql; existing installations use 07.
+No API requests or additional imports are needed to recover known subtotals.
+Additional enrichment is a separate, quota-consuming action.
+
+Offline regression commands from Phase_III:
+- python -m unittest discover -s tests -v
+- node --test tests/player_totals_ui.test.js
+- node --check static/ui.js
+- node --check static/guest.js

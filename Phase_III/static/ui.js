@@ -12,10 +12,24 @@ async function api(path,method='GET',data){
   return result;
 }
 function run(fn){let busy=false;return async event=>{event?.preventDefault();if(busy)return;busy=true;const button=event?.currentTarget?.tagName==='BUTTON'?event.currentTarget:event?.currentTarget?.querySelector('button[type="submit"], button:not([type])');if(button)button.disabled=true;try{say('');await fn(event);}catch(e){say(e.message);}finally{busy=false;if(button)button.disabled=false;}};}
+function statCoverage(row,stat){
+  const known=row['known_'+stat+'_appearances'],unknown=row['unknown_'+stat+'_appearances'];
+  if(known==null||unknown==null)return '';
+  return (unknown>0?'Partial observed coverage':'Complete observed coverage')+': '+known+' known, '+unknown+' unknown appearances';
+}
+function knownGoalLeaders(rows){
+  return rows.filter(row=>row.recorded_goals!=null).sort((a,b)=>b.recorded_goals-a.recorded_goals||a.player_id-b.player_id).slice(0,5);
+}
+function renderStat(cell,row,col){
+  cell.textContent=row[col]??'—';
+  const stat={recorded_goals:'goal',recorded_assists:'assist'}[col];
+  const coverage=stat&&statCoverage(row,stat);
+  if(coverage){const note=el('small',coverage);note.className='stat-coverage';cell.append(note);}
+}
 function grid(target,cols,rows,actions){
   const wrap=el('div');wrap.className='scroll';wrap.tabIndex=0;wrap.setAttribute('role','region');wrap.setAttribute('aria-label','Scrollable data table');const table=el('table'),head=table.createTHead().insertRow();
   const body=table.createTBody();let sorted=[...rows];
-  function render(){body.replaceChildren();for(const row of sorted){const tr=body.insertRow();if(target==='standings'&&Number(row.league_position)===1)tr.dataset.leader='true';for(const col of cols){const cell=tr.insertCell();if(['team_name','home_team','away_team'].includes(col))cell.append(club(row[col]));else cell.textContent=col==='is_synthetic'?(row[col]?'Fictional':'Provider'):row[col]??'—';}if(actions)actions(tr.insertCell(),row);}}
+  function render(){body.replaceChildren();for(const row of sorted){const tr=body.insertRow();if(target==='standings'&&Number(row.league_position)===1)tr.dataset.leader='true';for(const col of cols){const cell=tr.insertCell();if(['team_name','home_team','away_team'].includes(col))cell.append(club(row[col]));else if(col==='is_synthetic')cell.textContent=row[col]?'Fictional':'Provider';else renderStat(cell,row,col);}if(actions)actions(tr.insertCell(),row);}}
   for(const col of cols){const th=el('th');th.scope='col';th.setAttribute('aria-sort','none');const short={league_position:'#',team_name:'Club',played:'P',wins:'W',draws:'D',losses:'L',goal_difference:'GD',points:'Pts'};const sort=el('button',target==='standings'?(short[col]||title(col)):title(col));sort.className='sort-button';sort.title='Sort by '+title(col);sort.setAttribute('aria-label','Sort by '+title(col));let ascending=true;sort.onclick=()=>{for(const other of head.cells)other.setAttribute('aria-sort','none');th.setAttribute('aria-sort',ascending?'ascending':'descending');sorted.sort((a,b)=>{const x=a[col],y=b[col];const cmp=x==null&&y==null?0:x==null?-1:y==null?1:typeof x==='number'&&typeof y==='number'?x-y:String(x).localeCompare(String(y),undefined,{numeric:true});return ascending?cmp:-cmp;});ascending=!ascending;render();};th.append(sort);head.append(th);}
   if(actions)head.append(el('th','Actions'));render();wrap.append(table);$(target).replaceChildren(wrap);if(!rows.length){const empty=el('div',target==='history'?'No provider fixtures saved yet. Fetch a preview to begin.':'No matching records. Try another selection or clear the filter.');empty.className='empty';$(target).append(empty);}if(target==='grid'&&$('record-count'))$('record-count').textContent=rows.length+' records · Select a column heading to sort';
 }
@@ -27,7 +41,7 @@ if($('report')){
   async function report(reset){
     const current=++requestNumber;if(reset){$('field').replaceChildren(new Option('All fields',''));$('search').value='';}
     for(const fmt of ['csv','pdf'])if($(fmt)){$(fmt).removeAttribute('href');$(fmt).setAttribute('aria-disabled','true');}
-    const name=$('report').value;const params=new URLSearchParams({q:$('search').value,field:$('field').value});const url='/api/reports/'+name+'?'+params;
+    const name=$('report').value;if($('report-coverage'))$('report-coverage').hidden=!(cfg.api_football&&name==='v_player_totals');const params=new URLSearchParams({q:$('search').value,field:$('field').value});const url='/api/reports/'+name+'?'+params;
     $('grid').replaceChildren(el('p','Loading report…'));
     try{const {rows,columns}=await api(url);if(current!==requestNumber)return;grid('grid',columns,rows);$('report-title').textContent=title(name.slice(2));
       if(reset)for(const c of columns)$('field').add(new Option(title(c),c));
@@ -190,12 +204,13 @@ if(location.pathname==='/') {
     });
     api('/api/reports/v_player_totals').then(data=>{
       $('leaders').replaceChildren();
-      const rows=data.rows.filter(row=>row.recorded_goals!==null).sort((a,b)=>b.recorded_goals-a.recorded_goals||a.player_id-b.player_id).slice(0,5);
+      const rows=knownGoalLeaders(data.rows);
       const max=Math.max(1,...rows.map(row=>Number(row.recorded_goals)));
       for(const [i,row] of rows.entries()) {
         const line=el('div');line.className='leader';
         const rank=el('span',String(i+1).padStart(2,'0'));rank.className='rank';
         const player=el('div');player.className='player';player.append(el('strong',row.full_name),el('small',row.team_name+' · '+row.position));
+        const coverage=statCoverage(row,'goal');if(coverage)player.append(el('small',coverage));
         const meter=el('span');meter.className='player-meter';meter.setAttribute('aria-hidden','true');
         const fill=el('span');fill.style.width=(Number(row.recorded_goals)/max*100)+'%';meter.append(fill);player.append(meter);
         line.append(rank,player,el('b',row.recorded_goals));$('leaders').append(line);

@@ -26,6 +26,8 @@ def reports(name):
     if fmt=='json': return jsonify(columns=cols,rows=rows)
     matrix=[[c.replace('_',' ').title() for c in cols]]+[[str(row[c]) if row[c] is not None else '' for c in cols] for row in rows]
     title=name[2:].replace('_',' ').title()
+    if api_football_enabled() and name=='v_player_totals':
+        title='Player totals - known subtotals (partial season)'
     if fmt=='csv':
         buf=io.StringIO(); writer=csv.writer(buf)
         for row in matrix: writer.writerow(["'"+v if v.startswith(('=','+','@','-','\t','\r')) and not v.lstrip('-').isdigit() else v for v in row])
@@ -36,6 +38,8 @@ def reports(name):
         table=LongTable([[Paragraph(escape(v),styles['BodyText']) for v in row] for row in matrix],colWidths=[doc.width/len(cols)]*len(cols),repeatRows=1)
         table.setStyle(TableStyle([('BACKGROUND',(0,0),(-1,0),colors.lightgrey),('VALIGN',(0,0),(-1,-1),'TOP')]))
         note='API-Football EPL 2023/24: six-club subset; partial player coverage. Blank statistics are unknown.' if api_football_enabled() else 'Course dataset, including fictional sample records.'
+        if api_football_enabled() and name=='v_player_totals':
+            note+=' Goals and assists sum known values only. Coverage columns count known and unknown appearances; complete observed coverage is not a complete season.'
         doc.build([Paragraph(title,styles['Title']),Paragraph(note,styles['BodyText']),table])
         data=buf.getvalue(); mime='application/pdf'
     return Response(data,mimetype=mime,headers={'Content-Disposition':f'attachment; filename="{name}.{fmt}"'})
