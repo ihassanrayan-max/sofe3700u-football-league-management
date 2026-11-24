@@ -2,7 +2,9 @@
 
 For the shared teammate snapshot, use [setup/fresh_database/README.md](../setup/fresh_database/README.md) instead of the seed-and-migration installation below. That path already includes the schema, imported data and final views; do not apply migrations 05–07 afterward.
 
-Detailed **Windows / PowerShell** instructions for the `touchline-visual-upgrade` branch. See the [main README](../README.md) for features, architecture, and project background.
+The current application is **Group 20, EPL 2023/24**. Report Studio defaults to that active dataset. To demonstrate the assignment's original ten Phase II views, select **Phase II archive · original views** under **Report data**, then click **Apply filter**. JSON, CSV and PDF use the same selected source and SQL filters. Archive records retain their actual historical dates; original SQL and migrations retain their legacy schema identifiers for compatibility.
+
+Detailed **Windows / PowerShell** instructions for the current `main` branch. See the [main README](../README.md) for features, architecture, and project background. Sections below describe the alternative legacy seed-and-migration path; use the shared guide above for the completed snapshot installation.
 
 Run PowerShell commands in your terminal. Run SQL in MySQL Workbench or another connected MySQL SQL editor.
 
@@ -27,7 +29,7 @@ The migration account needs SELECT, INSERT, CREATE, CREATE VIEW, and REFERENCES 
 For a new clone:
 
 ```powershell
-git clone --branch touchline-visual-upgrade https://github.com/ihassanrayan-max/sofe3700u-football-league-management.git
+git clone --branch main https://github.com/ihassanrayan-max/sofe3700u-football-league-management.git
 cd sofe3700u-football-league-management
 ```
 
@@ -41,7 +43,7 @@ git branch --show-current
 If already on this branch with a clean working tree, update it using:
 
 ```powershell
-git pull --ff-only origin touchline-visual-upgrade
+git pull --ff-only origin main
 ```
 
 Resolve local changes or divergent history before updating; do not discard work. Keep your existing `.env`, virtual environment, and database.
@@ -329,3 +331,21 @@ Offline regression commands from Phase_III:
 - node --test tests/player_totals_ui.test.js
 - node --check static/ui.js
 - node --check static/guest.js
+
+## Coding readiness audit — November 24, 2026
+
+The active project is Group 20, EPL 2023/24. Historical Phase II data, original SQL scripts and legacy schema identifiers are preserved in the clearly labelled archive; they are not relabelled as current-season data.
+
+Verification completed on the audit machine:
+
+- All 73 Python regression tests and both JavaScript renderer tests passed. They cover sessions/roles, validation, error handling, provider parsing/persistence, and both report datasets.
+- A disposable MySQL schema restored the shared snapshot. All eight managed entities completed create/read/update/delete lifecycles. Invalid input and referenced-record deletion were rejected.
+- Both sets of ten SQL views returned JSON and generated CSV/PDF. The active dataset uses `tl_v_*`; `dataset=phase2` executes the original `v_*` definitions. Search is parameterized SQL and is preserved in exports. Guests cannot access either set.
+- One real API-Football fixtures request returned 30 eligible matches. Preview/save/reimport persisted records in the disposable MySQL schema without duplicate mappings. Repeat requests used the application's cache.
+- Four real enrichment requests returned player/team statistics for two fixtures and saved successfully in that disposable schema. No mock response was used for these live checks.
+- Headless Microsoft Edge exercised login, chart rendering, all 20 report tables, dataset selection, SQL search, CSV/PDF downloads, AJAX team CRUD, cached provider preview/save/history, a 390px mobile viewport and logout. No JavaScript page errors were reported.
+- Test schemas were removed; the completed installation's football records were not changed by the audit. Tokens, passwords, local cache and `.env` remain excluded from Git.
+
+Implementation locations: `app.py` handles authentication, roles, validation and CRUD; `services.py` handles database reports, exports and import routes; `api_football.py` handles real REST/JSON requests; `provider_store.py` handles transactional saving and identity mapping; templates and `static/ui.js` provide pages, forms, Fetch requests and charts.
+
+The coding requirements on assignment pages 3–4 are covered by these checks. Live API verification is specific to the tested key's access at that time; each teammate supplies their own credentials. Empty real-data reports and partial player coverage remain legitimate dataset limitations. This is a local demonstration app, not a hosted production service. The final report, slides, contribution matrix, screenshots and team evaluation remain separate submission tasks.

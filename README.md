@@ -132,11 +132,11 @@ See the [installation and API guide](Phase_III/README.md) for migration, configu
 For a new clone of this version:
 
 ```powershell
-git clone --branch touchline-visual-upgrade https://github.com/ihassanrayan-max/sofe3700u-football-league-management.git
+git clone --branch main https://github.com/ihassanrayan-max/sofe3700u-football-league-management.git
 cd sofe3700u-football-league-management
 ```
 
-Follow the [complete installation guide](Phase_III/README.md) to initialize or verify MySQL, apply the appropriate migrations, configure `Phase_III/.env`, and generate demo passwords.
+Follow the [shared installation guide](setup/fresh_database/README.md) to load the tested snapshot, configure `Phase_III/.env`, and generate demo passwords. The separate migration guide is for existing legacy installations only.
 
 Once the database and environment are configured:
 
@@ -154,7 +154,7 @@ Skip environment creation if `.venv` already exists. Open **http://127.0.0.1:500
 ## 🍿 Demo Walkthrough
 
 1. Sign in as ADMIN and inspect the Overview and Match Centre.
-2. Open Report Studio, search a report, sort its table, and export a filtered CSV/PDF.
+2. Open Report Studio. Use **Report data > EPL 2023/24** for current analytics and **Phase II archive · original views** to demonstrate all ten original assignment views. Click **Apply filter** after changing the dataset. Search, sort and export a filtered CSV/PDF from the selected source.
 3. Inspect core entities in Data Workbench. Demonstrate writes only with disposable test records.
 4. In API-Football mode, preview/save fixtures, then preview/save a player-and-team-statistics batch.
 5. Inspect saved history and team statistics, then revisit player reports.
@@ -212,4 +212,4 @@ These are possible extensions, not currently implemented features.
 - [API-Football](https://www.api-football.com/) — new-mode football data
 - [football-data.org](https://www.football-data.org/) — legacy football data
 
-Developed as a **Group 20 course project**. The database retains its original name, `group12_football_phase2`, for compatibility. Provider data remains subject to the respective provider's terms.
+Developed as a **Group 20 course project**, with **2023/24** as the active season. The shared installation uses `touchline_clean_20261124`; legacy installations may retain `group12_football_phase2`. These internal names and the preserved historical records do not change the displayed group or active season. Provider data remains subject to the respective provider's terms.

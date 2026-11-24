@@ -11,7 +11,10 @@ def reports(name):
     fmt=request.args.get('format','json')
     if fmt not in ('json','csv','pdf'): abort(400,'Unknown format.')
     if g.user['role']=='GUEST' and (name not in GUEST or fmt!='json'): abort(403,'This report or export requires a user account.')
-    source='tl_'+name if api_football_enabled() else name
+    dataset=request.args.get('dataset','active')
+    if dataset not in ('active','phase2'): abort(400,'Unknown report dataset.')
+    scoped=api_football_enabled() and dataset=='active'
+    source='tl_'+name if scoped else name
     cols=[r['Field'] for r in sql('SHOW COLUMNS FROM '+source)]
     q=request.args.get('q','').strip()
     field=request.args.get('field','')
@@ -26,7 +29,7 @@ def reports(name):
     if fmt=='json': return jsonify(columns=cols,rows=rows)
     matrix=[[c.replace('_',' ').title() for c in cols]]+[[str(row[c]) if row[c] is not None else '' for c in cols] for row in rows]
     title=name[2:].replace('_',' ').title()
-    if api_football_enabled() and name=='v_player_totals':
+    if scoped and name=='v_player_totals':
         title='Player totals - known subtotals (partial season)'
     if fmt=='csv':
         buf=io.StringIO(); writer=csv.writer(buf)
@@ -37,8 +40,8 @@ def reports(name):
         styles=getSampleStyleSheet()
         table=LongTable([[Paragraph(escape(v),styles['BodyText']) for v in row] for row in matrix],colWidths=[doc.width/len(cols)]*len(cols),repeatRows=1)
         table.setStyle(TableStyle([('BACKGROUND',(0,0),(-1,0),colors.lightgrey),('VALIGN',(0,0),(-1,-1),'TOP')]))
-        note='API-Football EPL 2023/24: six-club subset; partial player coverage. Blank statistics are unknown.' if api_football_enabled() else 'Course dataset, including fictional sample records.'
-        if api_football_enabled() and name=='v_player_totals':
+        note='API-Football EPL 2023/24: six-club subset; partial player coverage. Blank statistics are unknown.' if scoped else 'Original Phase II views: historical course dataset, including fictional sample records.'
+        if scoped and name=='v_player_totals':
             note+=' Goals and assists sum known values only. Coverage columns count known and unknown appearances; complete observed coverage is not a complete season.'
         doc.build([Paragraph(title,styles['Title']),Paragraph(note,styles['BodyText']),table])
         data=buf.getvalue(); mime='application/pdf'

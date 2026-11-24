@@ -37,18 +37,20 @@ if($('login'))$('login').onsubmit=run(async()=>{await api('/api/login','POST',Ob
 if($('logout'))$('logout').onclick=run(async()=>{await api('/api/logout','POST',{});location.assign('/login');});
 if($('report')){
   const requested=new URLSearchParams(location.search).get('view');if([...$('report').options].some(o=>o.value===requested))$('report').value=requested;
-  let requestNumber=0;
+  let requestNumber=0,loadedDataset=null;
   async function report(reset){
+    const dataset=$('dataset')?.value||'active';reset=reset||dataset!==loadedDataset;
     const current=++requestNumber;if(reset){$('field').replaceChildren(new Option('All fields',''));$('search').value='';}
     for(const fmt of ['csv','pdf'])if($(fmt)){$(fmt).removeAttribute('href');$(fmt).setAttribute('aria-disabled','true');}
-    const name=$('report').value;if($('report-coverage'))$('report-coverage').hidden=!(cfg.api_football&&name==='v_player_totals');const params=new URLSearchParams({q:$('search').value,field:$('field').value});const url='/api/reports/'+name+'?'+params;
+    const name=$('report').value;if($('report-coverage'))$('report-coverage').hidden=!(cfg.api_football&&dataset==='active'&&name==='v_player_totals');const params=new URLSearchParams({q:$('search').value,field:$('field').value,dataset});const url='/api/reports/'+name+'?'+params;
     $('grid').replaceChildren(el('p','Loading report…'));
-    try{const {rows,columns}=await api(url);if(current!==requestNumber)return;grid('grid',columns,rows);$('report-title').textContent=title(name.slice(2));
+    try{const {rows,columns}=await api(url);if(current!==requestNumber)return;loadedDataset=dataset;grid('grid',columns,rows);$('report-title').textContent=title(name.slice(2))+(dataset==='phase2'?' · Phase II archive':'');
       if(reset)for(const c of columns)$('field').add(new Option(title(c),c));
       for(const fmt of ['csv','pdf'])if($(fmt)){$(fmt).href=url+'&format='+fmt;$(fmt).removeAttribute('aria-disabled');}
     }catch(e){if(current===requestNumber){$('grid').replaceChildren(el('p','Report unavailable. Apply the filter to retry.'));throw e;}}
   }
   $('report').onchange=()=>{say('');report(true).catch(e=>say(e.message));};$('report-filter').onsubmit=run(()=>report(false));$('reset-filter').onclick=run(()=>report(true));run(()=>report(true))();
+  if($('dataset'))$('dataset').onchange=()=>{for(const fmt of ['csv','pdf'])if($(fmt)){$(fmt).removeAttribute('href');$(fmt).setAttribute('aria-disabled','true');}say('Select Apply filter to load the selected report data.');};
 }
 if($('entity')){
   let selected=null;
@@ -195,7 +197,7 @@ if(location.pathname==='/') {
     $('season').onchange=drawSeason;$('chart-measure').onchange=()=>drawChart(currentSeason());
     api('/api/reports/v_league_standings').then(data=>{
       standings=data.rows;
-      for(const [id,label] of new Map(standings.map(row=>[String(row.season_id),row.season_label+' · Season '+row.season_id])))$('season').add(new Option(label,id));
+      for(const [id,label] of new Map(standings.map(row=>[String(row.season_id),row.season_label])))$('season').add(new Option(label,id));
       if(!standings.length){$('season').add(new Option('No enrolled seasons',''));$('season').disabled=true;}
       drawSeason();
     }).catch(error=>{
@@ -210,7 +212,7 @@ if(location.pathname==='/') {
         const line=el('div');line.className='leader';
         const rank=el('span',String(i+1).padStart(2,'0'));rank.className='rank';
         const player=el('div');player.className='player';player.append(el('strong',row.full_name),el('small',row.team_name+' · '+row.position));
-        const coverage=statCoverage(row,'goal');if(coverage)player.append(el('small',coverage));
+        const coverage=statCoverage(row,'goal');if(coverage){const note=el('small',coverage);note.className='stat-coverage';player.append(note);}
         const meter=el('span');meter.className='player-meter';meter.setAttribute('aria-hidden','true');
         const fill=el('span');fill.style.width=(Number(row.recorded_goals)/max*100)+'%';meter.append(fill);player.append(meter);
         line.append(rank,player,el('b',row.recorded_goals));$('leaders').append(line);

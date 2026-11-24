@@ -145,7 +145,7 @@ If port 5000 is occupied, stop the older Flask instance first. Refresh or sign o
 ## 6. Demonstrate the connection
 
 1. As admin, open the dashboard and confirm the six clubs and loaded results.
-2. Open each report. Player Totals should show known subtotals with appearance-coverage columns. Check that empty real-data reports display normally.
+2. Open each report. **Report data > EPL 2023/24** shows active Group 20 analytics. Select **Phase II archive · original views** and click **Apply filter** to demonstrate all ten original assignment views. The archive deliberately retains historical records and their original dates. Player Totals in the active dataset shows known subtotals with appearance-coverage columns. Check that empty real-data reports display normally.
 3. Filter Match Results by a club and download CSV and PDF; compare the selected rows.
 4. Open Manage data and verify records load. Use an unused test team ID to create, update and delete a disposable record.
 5. Open Import and verify saved provider records display. Fetching new records is optional and requires your own API-Football key.
