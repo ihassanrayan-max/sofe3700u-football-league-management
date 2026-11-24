@@ -1,5 +1,7 @@
 # Touchline — Installation and Execution Guide
 
+For the shared teammate snapshot, use [setup/fresh_database/README.md](../setup/fresh_database/README.md) instead of the seed-and-migration installation below. That path already includes the schema, imported data and final views; do not apply migrations 05–07 afterward.
+
 Detailed **Windows / PowerShell** instructions for the `touchline-visual-upgrade` branch. See the [main README](../README.md) for features, architecture, and project background.
 
 Run PowerShell commands in your terminal. Run SQL in MySQL Workbench or another connected MySQL SQL editor.

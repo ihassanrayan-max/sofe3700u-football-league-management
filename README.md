@@ -4,7 +4,9 @@ A full-stack football analytics application built with **Python, Flask, MySQL, a
 
 Built for **SOFE 3700U — Data Management Systems, Group 20**, the project connects relational database design, SQL views, REST/JSON services, authentication, and external football data.
 
-**Hosting:** the website and MySQL database run locally. This repository does not provide a hosted demo or a database dump. **Current scope:** API-Football data for the **2023/24 Premier League matches between six selected clubs**, not the complete Premier League.
+**Hosting:** the website and MySQL database run locally. **Current scope:** API-Football data for the **2023/24 Premier League matches between six selected clubs**, not the complete Premier League.
+
+**Teammate setup:** follow [the shared fresh-database guide](setup/fresh_database/README.md). It includes four tested SQL scripts with the same sanitized football snapshot for every teammate, private local configuration, demo password setup and later code-update instructions. Use this installation path by itself; do not combine it with the original seed scripts or migrations below.
 
 ## 📑 Table of Contents
 
