@@ -1,10 +1,6 @@
--- REVIEW ONLY. Do not run until the owner approves a backup and this migration.
--- Additive MySQL 8.0.16+ migration: retains every existing record and original view.
--- FIRST RUN ONLY. Run 06_api_football_preflight.sql and inspect every result first.
--- Stop all writers. In Workbench DISABLE continuation after SQL errors.
--- If any statement fails: STOP, ROLLBACK uncommitted DML, and review partial DDL.
--- Never rerun this file blindly. DDL commits implicitly and cannot be rolled back.
--- All provider_* / tl_* names and the EPL 2023/24 season must be absent initially.
+-- One-time legacy migration. Back up the schema and stop writers first.
+-- Run the 06 preflight before this file and verification afterward.
+-- Stop on errors: DDL commits implicitly; inspect partial state before retrying.
 USE group12_football_phase2;
 
 CREATE TABLE provider_teams (

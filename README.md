@@ -1,215 +1,89 @@
-# ⚽ Touchline — Football League Management & Statistics
+# Touchline
 
-A full-stack football analytics application built with **Python, Flask, MySQL, and vanilla JavaScript**. Touchline brings match results, player statistics, searchable reports, and database management into a responsive dark interface.
+Football League Management and Statistics System for SOFE 3700U, Group 20.
+The active dataset covers the 2023/24 Premier League matches between Arsenal,
+Chelsea, Liverpool, Manchester City, Manchester United and Tottenham Hotspur.
+The standings describe this six-club subset, not the full Premier League.
 
-Built for **SOFE 3700U — Data Management Systems, Group 20**, the project connects relational database design, SQL views, REST/JSON services, authentication, and external football data.
+## Setup
 
-**Hosting:** the website and MySQL database run locally. **Current scope:** API-Football data for the **2023/24 Premier League matches between six selected clubs**, not the complete Premier League.
+Follow [the teammate setup guide](setup/fresh_database/README.md). It contains
+four SQL scripts for a fresh database, Windows installation commands and local
+configuration checks. Everyone should use the `main` branch.
 
-**Teammate setup:** follow [the shared fresh-database guide](setup/fresh_database/README.md). It includes four tested SQL scripts with the same sanitized football snapshot for every teammate, private local configuration, demo password setup and later code-update instructions. Use this installation path by itself; do not combine it with the original seed scripts or migrations below.
+The application runs locally with Python 3.11+, Flask and MySQL 8.0.16+.
+The frontend uses HTML, CSS, vanilla JavaScript and Chart.js. PDF exports use
+ReportLab. No separate frontend server is needed.
 
-## 📑 Table of Contents
-
-- [Technologies](#-technologies)
-- [Features](#-features)
-- [Roles and Access](#-roles-and-access)
-- [How It Works](#-how-it-works)
-- [API Integration and Data Scope](#-api-integration-and-data-scope)
-- [Project Structure](#-project-structure)
-- [Running the Project Locally](#-running-the-project-locally)
-- [Demo Walkthrough](#-demo-walkthrough)
-- [Testing](#-testing)
-- [Learning Outcomes](#-learning-outcomes)
-- [Future Improvements](#-future-improvements)
-- [Documentation and Credits](#-documentation-and-credits)
-
-## 📦 Technologies
-
-| Layer | Technologies |
-| --- | --- |
-| Backend | Python 3.11+, Flask, Werkzeug password hashing |
-| Database | MySQL 8.0.16+, PyMySQL, relational constraints and SQL views |
-| Frontend | HTML, Jinja templates, CSS, JavaScript Fetch API |
-| Visualization | Locally bundled Chart.js |
-| Exports | Python CSV utilities and ReportLab PDF generation |
-| External data | API-Football v3 through direct API-Sports; legacy football-data.org v4 |
-| Configuration and testing | python-dotenv, unittest, SQLite for local API cache/quota tracking |
-
-## 💡 Features
-
-### 📊 Overview and Match Centre
-
-- View six-club standings, team comparisons, recorded goals, and player goal leaders.
-- Switch between completed results and scheduled fixtures and search participating clubs.
-- Explore a charcoal interface with emerald/lime accents, club monograms, and a local stadium illustration.
-- Use responsive navigation, keyboard focus indicators, labelled forms, and scrollable tables.
-
-### 🔍 Report Studio
-
-- Explore all ten course reports, including match details, standings, player totals, and home/away performance.
-- Search across report fields or filter a specific column using backend SQL queries.
-- Sort displayed tables and export filtered results as **CSV or PDF**.
-- In API-Football mode, keep fictional and other-season matches out of analytics before aggregation.
-
-### 🗂️ Data Workbench
-
-- Administrators can create, read, update, and delete records across eight core entities.
-- Validate required values, relationships, match scores, and player participation.
-- Preserve imported historical player profiles separately from the original player editor.
-- Protect provider-mapped matches from manual edits/deletion in API-Football mode.
-
-### 🌐 Fixture and Statistics Imports
-
-- Preview real fixtures before saving them to MySQL.
-- Enrich saved matches with per-player minutes, goals, assists, and provider-returned team statistics.
-- Process enrichment in batches of up to two completed fixtures.
-- Review saved import history and available team statistics.
-- Cache responses and track local API usage to reduce repeated requests.
-
-## 🔐 Roles and Access
-
-| Role | Demo identity | Access |
-| --- | --- | --- |
-| ADMIN | `admin.one@example.com` | Overview, reports/exports, Data Workbench, imports |
-| USER | `reader.one@example.com` | Analytics overview and reports/exports; no CRUD or imports |
-| GUEST | `guest.one@example.com` | Read-only six-team directory with name search and city filtering |
-
-Guest accounts cannot access matches, player statistics, charts, reports, or exports. Permissions are enforced by the backend, not only by hiding interface elements. Passwords are generated locally; none are included in the repository.
-
-## 🧱 How It Works
-
-1. Flask authenticates the user against MySQL password hashes and records a server-side session.
-2. Jinja renders the page appropriate to the user's role. JavaScript calls protected REST endpoints for analytics and management actions.
-3. The backend validates requests, checks roles and CSRF tokens, and executes parameterized SQL.
-4. Report endpoints query the original `v_*` views in legacy mode or the scoped `tl_v_*` views in API-Football mode.
-5. An administrator requests an import preview. The server validates provider data and caches the snapshot.
-6. Saving the reviewed snapshot persists records in a database transaction; charts and reports then read saved MySQL data.
-
-The API cache is a local SQLite file. **MySQL remains the application database.** Imports are explicit actions; there is no automatic background synchronization or live-score polling.
-
-## 🔄 API Integration and Data Scope
-
-| Mode | Configuration | Season | Data |
-| --- | --- | --- | --- |
-| API-Football | `TOUCHLINE_PROVIDER=api-football`, `API_FOOTBALL_KEY` | 2023/24 | Fixtures/results, per-match player statistics, team statistics |
-| Legacy football-data.org | `TOUCHLINE_PROVIDER=football-data.org`, `FOOTBALL_DATA_TOKEN` | 2025/26 | Fixtures/results alongside the original sample dataset |
-
-The new provider uses league **39**, season **2023**, and only fixtures where both clubs are **Arsenal, Chelsea, Liverpool, Manchester City, Manchester United, or Tottenham Hotspur**. A complete home-and-away schedule for this subset contains 30 matches.
-
-- Standings describe a **six-club mini-league**, not the official 20-club EPL table.
-- Player totals cover imported appearances in those matches, not an entire 38-game season.
-- Missing provider statistics remain unknown; the application does not invent goals, assists, or appearances.
-- Original seed fixtures and player statistics are fictional. API-Football analytics exclude them, but the underlying historical records remain available for course/database review.
-- API access and historical coverage depend on your provider account. Adding a key does not guarantee every endpoint is available.
-- Apply the additive migration before enabling API-Football mode. The example environment deliberately defaults to legacy mode.
-
-See the [installation and API guide](Phase_III/README.md) for migration, configuration, quota limits, and import steps.
-
-## 📁 Project Structure
-
-| Path | Purpose |
-| --- | --- |
-| `01_create_tables.sql` | Core MySQL schema; destructive if rerun on an existing installation |
-| `02_insert_data.sql` | Sample users, clubs, players, seasons, and fictional statistics |
-| `03_create_views.sql` | Ten original SQL reporting views |
-| `04_test_queries.sql` | Queries and checks for the original seed dataset |
-| `Phase_III/app.py` | Authentication, authorization, pages, team directory, CRUD, credential commands |
-| `Phase_III/services.py` | Reports, CSV/PDF exports, and provider import routes |
-| `Phase_III/api_football.py` | API-Football client, response validation, cache, quota ledger, previews |
-| `Phase_III/provider_store.py` | Transactional persistence and provider identity mapping |
-| `Phase_III/wsgi.py` | Flask entry point that registers application services |
-| `Phase_III/05_phase3.sql` | Login credentials, sessions, and legacy import tracking |
-| `Phase_III/06_api_football*.sql` | Provider migration plus read-only preflight and verification scripts |
-| `Phase_III/templates/`, `Phase_III/static/` | Page templates, styles, scripts, local artwork, and Chart.js |
-| `Phase_III/tests/` | Automated regression tests |
-| `ER_diagram.svg`, `Relational_schema.svg` | Database design diagrams |
-| `Phase_III/README.md` | Detailed Windows installation, execution, and troubleshooting guide |
-
-## 🚦 Running the Project Locally
-
-**Requirements:** Windows/PowerShell, Python 3.11+, a running MySQL 8.0.16+ server, a SQL client, and Git. Node.js is optional for JavaScript syntax checks.
-
-For a new clone of this version:
+After completing setup, start the application from `Phase_III`:
 
 ```powershell
-git clone --branch main https://github.com/ihassanrayan-max/sofe3700u-football-league-management.git
-cd sofe3700u-football-league-management
+.\.venv\Scripts\python.exe -m flask --app wsgi run --host 127.0.0.1 --port 5000
 ```
 
-Follow the [shared installation guide](setup/fresh_database/README.md) to load the tested snapshot, configure `Phase_III/.env`, and generate demo passwords. The separate migration guide is for existing legacy installations only.
+Open http://127.0.0.1:5000/login. Each installation generates its own passwords.
+Keep `.env`, passwords, backups and API keys private. Routine code updates do not
+require reloading the database.
 
-Once the database and environment are configured:
+## Features
+
+- Overview: saved match results, six-club standings, player totals and charts.
+- Report Studio: ten current-season reports and the original ten Phase II views.
+  Select **Phase II archive** and click **Apply filter** for the original views.
+  Search runs in MySQL; CSV and PDF exports use the selected dataset and filters.
+- Data Workbench: administrators manage users, competitions, seasons, clubs,
+  memberships, players, matches and player statistics.
+- Fixture imports: administrators preview API-Football fixtures, save them to
+  MySQL and import player/team statistics for up to two fixtures per batch.
+- Team directory: guests can search club names and filter by city.
+
+Administrators can manage records and imports. Users can browse analytics and
+export reports. Guests have access to the team directory only. The backend
+checks permissions and validates writes, including CSRF tokens and foreign keys.
+
+## Data and imports
+
+Reports read saved MySQL data. External API requests happen when an administrator
+fetches an import preview; valid cached responses are reused. Saving uses the
+reviewed preview. Provider IDs and fixture identity checks prevent duplicate
+imports and reject conflicting results.
+
+API-Football uses league 39 and season 2023. The key stays in the backend's private
+`.env`. Historical access depends on the provider account. Missing statistics
+remain unknown; player totals show partial coverage rather than full-season
+rankings. The original Phase II sample results are fictional and remain in the
+archive. The supported legacy football-data.org mode uses the historical
+2025/26 dataset; it is not the active 2023/24 scope.
+
+## Files
+
+- `Phase_III/`: application, dependencies, templates, assets and regression tests.
+- `setup/fresh_database/`: current shared SQL snapshot and installation guide.
+- Root SQL files and diagrams: original Phase II submission material.
+- `Phase_III/05_phase3.sql` through `07_player_totals*.sql`: upgrades for existing
+  legacy installations. They are not part of the fresh-snapshot setup.
+
+See [the application guide](Phase_III/README.md) for endpoints, provider settings,
+legacy migrations and troubleshooting. See [the cleanup audit](CLEANUP_AUDIT.md)
+for the maintenance changes and verification results.
+
+## Tests
+
+From `Phase_III`:
 
 ```powershell
-cd Phase_III
-py -m venv .venv
-.\.venv\Scripts\python -m pip install -r requirements.txt
-.\.venv\Scripts\python -m flask --app wsgi run --host 127.0.0.1 --port 5000
+.\.venv\Scripts\python.exe -m unittest discover -s tests -v
+node --test tests/player_totals_ui.test.js
 ```
 
-Skip environment creation if `.venv` already exists. Open **http://127.0.0.1:5000/login** and use your locally generated credentials. Keep the terminal running; press **Ctrl+C** to stop.
+Node.js is needed only for JavaScript tests. The suite uses mocks and isolated
+in-memory data; it does not call your provider or change your MySQL database.
+Live import and database checks are documented separately in the application
+guide. The final report, slides, contribution matrix and team evaluation are
+separate course deliverables.
 
-**Existing installations:** preserve `.env`, credentials, and the database. Do not rerun scripts 01–02 or the first-run API-Football migration just to start an updated frontend.
-
-## 🍿 Demo Walkthrough
-
-1. Sign in as ADMIN and inspect the Overview and Match Centre.
-2. Open Report Studio. Use **Report data > EPL 2023/24** for current analytics and **Phase II archive · original views** to demonstrate all ten original assignment views. Click **Apply filter** after changing the dataset. Search, sort and export a filtered CSV/PDF from the selected source.
-3. Inspect core entities in Data Workbench. Demonstrate writes only with disposable test records.
-4. In API-Football mode, preview/save fixtures, then preview/save a player-and-team-statistics batch.
-5. Inspect saved history and team statistics, then revisit player reports.
-6. Sign in as USER to demonstrate read-only analytics.
-7. Sign in as GUEST to demonstrate the restricted team directory and its search/filter controls.
-
-The diagram below documents the database design; it is not a screenshot of the application.
-
-![Original football league entity relationship diagram](ER_diagram.png)
-
-## 🧪 Testing
-
-From `Phase_III`, with dependencies installed:
-
-```powershell
-.\.venv\Scripts\python -m unittest discover -s tests -v
-```
-
-Optional, with Node.js installed:
-
-```powershell
-node --check static/ui.js
-node --check static/guest.js
-node --check static/chart.umd.min.js
-```
-
-Tests cover role restrictions, report/export contracts, validation of provider data, preview/save protections, migration review, and demo password reset behavior. They use mocks or isolated in-memory data; passing them does not verify your live MySQL migration, provider subscription, or browser layout.
-
-## 📚 Learning Outcomes
-
-This group project applies:
-
-- Relational modelling, primary/foreign keys, constraints, and SQL joins, subqueries, grouping, and views.
-- A database-backed REST API with validation, session authentication, role checks, and CSRF protection.
-- Asynchronous frontend updates and charts driven by saved database records.
-- Adapting between API providers while preserving historical data and separate provider identities.
-- Handling missing statistics, API quotas, transactional imports, and export formats.
-- Maintaining frontend/backend permission boundaries with automated regression coverage.
-
-## 🧪 Future Improvements
-
-- Support all 20 clubs and selectable seasons after extending the data model and importer.
-- Add more statistics views where provider coverage is available.
-- Add automated browser accessibility and responsive-layout checks.
-- Add deployment configuration and a production WSGI server.
-- Add shared quota coordination before running the application on multiple hosts.
-
-These are possible extensions, not currently implemented features.
-
-## 📖 Documentation and Credits
-
-- [Detailed Windows setup, execution, API imports, and troubleshooting](Phase_III/README.md)
-- [Original relational schema](Relational_schema.svg)
-- [Original entity relationship diagram](ER_diagram.svg)
-- [API-Football](https://www.api-football.com/) — new-mode football data
-- [football-data.org](https://www.football-data.org/) — legacy football data
-
-Developed as a **Group 20 course project**, with **2023/24** as the active season. The shared installation uses `touchline_clean_20261124`; legacy installations may retain `group12_football_phase2`. These internal names and the preserved historical records do not change the displayed group or active season. Provider data remains subject to the respective provider's terms.
+Football data services: [API-Football](https://www.api-football.com/) and
+[football-data.org](https://www.football-data.org/). Their data remains subject
+to their terms. The original ER diagram is available as
+[SVG](ER_diagram.svg) or [PNG](ER_diagram.png), with the
+[relational schema](Relational_schema.svg).

@@ -1,10 +1,5 @@
--- Forward-only, repeatable MySQL 8 view update. Does not change table records.
--- FIRST run 07_player_totals_preflight.sql and review every result.
--- STOP if wrong schema, missing dependencies, duplicate appearance keys, or
--- insufficient privileges. Requires CREATE VIEW, DROP on this view, and SELECT
--- on dependencies. Use an authorized administrator; do not broaden app grants.
--- CREATE OR REPLACE is atomic on MySQL 8, but DDL implicitly commits.
--- Run separately from any open data-edit transaction. Do not rerun migration 06.
+-- Repeatable legacy player-totals view update; does not change table records.
+-- Run the 07 preflight and verification scripts. DDL commits implicitly.
 USE group12_football_phase2;
 CREATE OR REPLACE SQL SECURITY INVOKER VIEW tl_v_player_totals AS
 SELECT p.player_id, p.full_name, t.team_name, p.position,
