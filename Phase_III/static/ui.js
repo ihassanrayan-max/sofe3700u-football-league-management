@@ -26,29 +26,45 @@ function renderStat(cell,row,col){
   const coverage=stat&&statCoverage(row,stat);
   if(coverage){const note=el('small',coverage);note.className='stat-coverage';cell.append(note);}
 }
-function grid(target,cols,rows,actions){
+function reportTitle(name){return name==='v_above_any_team_goal_total'?'Player Goal Comparison':title(name.slice(2));}
+function comparisonEmptyMessage(query){
+  return query.trim()?'No player comparisons match the current search. Clear the search to inspect the full report.':'No qualifying comparisons are available. A player must exceed at least one club’s known recorded goal subtotal; equal totals and unknown-only totals do not qualify. Results depend on imported coverage. If migration 09 is pending, ask the database owner to apply it.';
+}
+function scheduledEmptyMessage(providerMode,query){
+  if(query.trim())return 'No scheduled fixtures match the current search. Clear the search to inspect the full scope.';
+  return 'No scheduled fixtures are available for the selected season and clubs.'+(providerMode?' Premier League 2023/24 is a completed season; this report includes only stored SCHEDULED fixtures for the six project clubs.':' This historical/course report uses stored status; fictional Phase II records are not real upcoming matches.');
+}
+function grid(target,cols,rows,actions,emptyMessage,pageSize=0){
   const wrap=el('div');wrap.className='scroll';wrap.tabIndex=0;wrap.setAttribute('role','region');wrap.setAttribute('aria-label','Scrollable data table');const table=el('table'),head=table.createTHead().insertRow();
-  const body=table.createTBody();let sorted=[...rows];
-  function render(){body.replaceChildren();for(const row of sorted){const tr=body.insertRow();if(target==='standings'&&Number(row.league_position)===1)tr.dataset.leader='true';for(const col of cols){const cell=tr.insertCell();if(['team_name','home_team','away_team'].includes(col))cell.append(club(row[col]));else if(col==='is_synthetic')cell.textContent=row[col]?'Fictional':'Provider';else renderStat(cell,row,col);}if(actions)actions(tr.insertCell(),row);}}
-  for(const col of cols){const th=el('th');th.scope='col';th.setAttribute('aria-sort','none');const short={league_position:'#',team_name:'Club',played:'P',wins:'W',draws:'D',losses:'L',goal_difference:'GD',points:'Pts'};const sort=el('button',target==='standings'?(short[col]||title(col)):title(col));sort.className='sort-button';sort.title='Sort by '+title(col);sort.setAttribute('aria-label','Sort by '+title(col));let ascending=true;sort.onclick=()=>{for(const other of head.cells)other.setAttribute('aria-sort','none');th.setAttribute('aria-sort',ascending?'ascending':'descending');sorted.sort((a,b)=>{const x=a[col],y=b[col];const cmp=x==null&&y==null?0:x==null?-1:y==null?1:typeof x==='number'&&typeof y==='number'?x-y:String(x).localeCompare(String(y),undefined,{numeric:true});return ascending?cmp:-cmp;});ascending=!ascending;render();};th.append(sort);head.append(th);}
-  if(actions)head.append(el('th','Actions'));render();wrap.append(table);$(target).replaceChildren(wrap);if(!rows.length){const empty=el('div',target==='history'?'No provider fixtures saved yet. Fetch a preview to begin.':'No matching records. Try another selection or clear the filter.');empty.className='empty';$(target).append(empty);}if(target==='grid'&&$('record-count'))$('record-count').textContent=rows.length+' records · Select a column heading to sort';
+  const body=table.createTBody();let sorted=[...rows],page=0;let previous,next,pageLabel;
+  function render(){body.replaceChildren();for(const row of (pageSize?sorted.slice(page*pageSize,(page+1)*pageSize):sorted)){const tr=body.insertRow();if(target==='standings'&&Number(row.league_position)===1)tr.dataset.leader='true';for(const col of cols){const cell=tr.insertCell();if(['team_name','home_team','away_team'].includes(col))cell.append(club(row[col]));else if(col==='is_synthetic')cell.textContent=row[col]?'Fictional':'Provider';else renderStat(cell,row,col);}if(actions)actions(tr.insertCell(),row);}if(pageLabel){pageLabel.textContent='Page '+(page+1)+' of '+Math.max(1,Math.ceil(sorted.length/pageSize));previous.disabled=page===0;next.disabled=(page+1)*pageSize>=sorted.length;}}
+  for(const col of cols){const th=el('th');th.scope='col';th.setAttribute('aria-sort','none');const short={league_position:'#',team_name:'Club',played:'P',wins:'W',draws:'D',losses:'L',goal_difference:'GD',points:'Pts'};const sort=el('button',target==='standings'?(short[col]||title(col)):title(col));sort.className='sort-button';sort.title='Sort by '+title(col);sort.setAttribute('aria-label','Sort by '+title(col));let ascending=true;sort.onclick=()=>{for(const other of head.cells)other.setAttribute('aria-sort','none');th.setAttribute('aria-sort',ascending?'ascending':'descending');sorted.sort((a,b)=>{const x=a[col],y=b[col];const cmp=x==null&&y==null?0:x==null?-1:y==null?1:typeof x==='number'&&typeof y==='number'?x-y:String(x).localeCompare(String(y),undefined,{numeric:true});return ascending?cmp:-cmp;});ascending=!ascending;page=0;render();};th.append(sort);head.append(th);}
+  if(actions)head.append(el('th','Actions'));render();wrap.append(table);$(target).replaceChildren(wrap);if(!rows.length){const empty=el('div',emptyMessage||(target==='history'?'No provider fixtures saved yet. Fetch a preview to begin.':'No matching records. Try another selection or clear the filter.'));empty.className='empty';$(target).append(empty);}if(pageSize&&rows.length>pageSize){const pager=el('div');pager.className='controls';previous=el('button','Previous');next=el('button','Next');pageLabel=el('span');pageLabel.setAttribute('aria-live','polite');for(const button of [previous,next]){button.type='button';button.className='secondary';}previous.onclick=()=>{page--;render();};next.onclick=()=>{page++;render();};pager.append(previous,pageLabel,next);$(target).append(pager);render();}if(target==='grid'&&$('record-count'))$('record-count').textContent=rows.length+' records · Select a column heading to sort';
 }
 if($('login'))$('login').onsubmit=run(async()=>{await api('/api/login','POST',Object.fromEntries(new FormData($('login'))));location.assign('/');});
 if($('logout'))$('logout').onclick=run(async()=>{await api('/api/logout','POST',{});location.assign('/login');});
 if($('report')){
   const requested=new URLSearchParams(location.search).get('view');if([...$('report').options].some(o=>o.value===requested))$('report').value=requested;
+  if($('fixture-source'))$('fixture-source').value=$('report').value==='v_scheduled_fixtures'&&new URLSearchParams(location.search).get('source')==='phase2-demo'?'phase2-demo':'current';
   let requestNumber=0;
   async function report(reset){
     const current=++requestNumber;if(reset){$('field').replaceChildren(new Option('All fields',''));$('search').value='';}
     for(const fmt of ['csv','pdf'])if($(fmt)){$(fmt).removeAttribute('href');$(fmt).setAttribute('aria-disabled','true');}
-    const name=$('report').value;if($('report-coverage'))$('report-coverage').hidden=!(cfg.api_football&&name==='v_player_totals');const params=new URLSearchParams({q:$('search').value,field:$('field').value});const url='/api/reports/'+name+'?'+params;
+    const name=$('report').value;
+    const scheduled=name==='v_scheduled_fixtures';
+    if($('goal-comparison-note'))$('goal-comparison-note').hidden=name!=='v_above_any_team_goal_total';
+    if($('fixture-source-control'))$('fixture-source-control').hidden=!scheduled;
+    const demo=scheduled&&$('fixture-source')?.value==='phase2-demo';
+    if($('fixture-source-note')){$('fixture-source-note').hidden=!scheduled;$('fixture-source-note').textContent=demo?'Phase II Demo — Synthetic Fixtures. Synthetic demonstration: fictional records, not API matches or upcoming games. Demo match IDs belong to a separate table. Kickoff times are UTC.':'Current provider dataset. For a separate database-backed example, explicitly select Phase II Demo — Synthetic Fixtures above. Kickoff times are UTC.';}
+    if($('report-coverage'))$('report-coverage').hidden=!(cfg.api_football&&name==='v_player_totals');const params=new URLSearchParams({q:$('search').value,field:$('field').value});if(demo)params.set('source','phase2-demo');const url='/api/reports/'+name+'?'+params;
     $('grid').replaceChildren(el('p','Loading report…'));
-    try{const {rows,columns}=await api(url);if(current!==requestNumber)return;grid('grid',columns,rows);$('report-title').textContent=title(name.slice(2));
+    try{const {rows,columns}=await api(url);if(current!==requestNumber)return;grid('grid',columns,rows,null,name==='v_scheduled_fixtures'?(demo?'No synthetic demonstration fixtures match. Clear the search or ask the database owner to verify seed 08.':scheduledEmptyMessage(cfg.api_football,params.get('q'))):name==='v_above_any_team_goal_total'?comparisonEmptyMessage(params.get('q')):undefined,scheduled?10:0);$('report-title').textContent=reportTitle(name);
       if(reset)for(const c of columns)$('field').add(new Option(title(c),c));
       for(const fmt of ['csv','pdf'])if($(fmt)){$(fmt).href=url+'&format='+fmt;$(fmt).removeAttribute('aria-disabled');}
     }catch(e){if(current===requestNumber){$('grid').replaceChildren(el('p','Report unavailable. Apply the filter to retry.'));throw e;}}
   }
-  $('report').onchange=()=>{say('');report(true).catch(e=>say(e.message));};$('report-filter').onsubmit=run(()=>report(false));$('reset-filter').onclick=run(()=>report(true));run(()=>report(true))();
+  if($('fixture-source'))$('fixture-source').onchange=run(()=>report(true));
+  $('report').onchange=()=>{if($('fixture-source'))$('fixture-source').value='current';say('');report(true).catch(e=>say(e.message));};$('report-filter').onsubmit=run(()=>report(false));$('reset-filter').onclick=run(()=>report(true));run(()=>report(true))();
 }
 if($('entity')){
   let selected=null;

@@ -37,3 +37,11 @@ test('leaders include partial and zero subtotals; exclude unknown and rank numer
   assert.match(context.statCoverage(rows[2],'goal'),/Partial observed coverage/);
   assert.equal(context.statCoverage({known_goal_appearances:2,unknown_goal_appearances:0},'goal'),'Complete observed coverage: 2 known, 0 unknown appearances');
 });
+
+test('View 2 visible title and empty explanations preserve other report names',()=>{
+  assert.equal(context.reportTitle('v_above_any_team_goal_total'),'Player Goal Comparison');
+  assert.equal(context.reportTitle('v_scheduled_fixtures'),'Scheduled Fixtures');
+  assert.match(context.comparisonEmptyMessage(''),/at least one club/);
+  assert.match(context.comparisonEmptyMessage(''),/equal totals and unknown-only totals do not qualify/);
+  assert.match(context.comparisonEmptyMessage('Arsenal'),/current search/);
+});

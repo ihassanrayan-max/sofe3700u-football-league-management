@@ -335,3 +335,5 @@ label{font-size:14px}
 .fixture-date{font-size:14px}
 
 .stat-coverage{display:block;max-width:22rem;white-space:normal;color:var(--muted);font-size:.75rem;margin-top:.3rem}
+#fixture-source-control[hidden]{display:none}
+@media(min-width:1101px){#report-filter:has(#fixture-source-control:not([hidden])){grid-template-columns:minmax(150px,1fr) minmax(220px,1.4fr) 1fr 1fr auto auto}}

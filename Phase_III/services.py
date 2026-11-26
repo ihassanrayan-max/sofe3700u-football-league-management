@@ -11,8 +11,20 @@ def reports(name):
     fmt=request.args.get('format','json')
     if fmt not in ('json','csv','pdf'): abort(400,'Unknown format.')
     if g.user['role']=='GUEST' and (name not in GUEST or fmt!='json'): abort(403,'This report or export requires a user account.')
+    dataset=request.args.get('source','current')
+    if dataset not in ('current','phase2-demo') or (dataset!='current' and name!='v_scheduled_fixtures'):
+        abort(400,'The synthetic demonstration source is available only for Scheduled Fixtures.')
+    demo=dataset=='phase2-demo'
     source='tl_'+name if api_football_enabled() else name
+    if demo:
+        if not sql("SELECT 1 FROM information_schema.VIEWS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='tl_demo_v_scheduled_fixtures'"):
+            abort(503,'Synthetic demonstration is not installed. Ask the database owner to review and run 08_scheduled_demo.sql; the real dataset is unchanged.')
+        source='tl_demo_v_scheduled_fixtures'
     cols=[r['Field'] for r in sql('SHOW COLUMNS FROM '+source)]
+    if name=='v_scheduled_fixtures' and 'match_status' not in cols:
+        # Keep both original views intact; expose the actual stored status via the PK.
+        source='(SELECT scheduled.*, fixture.match_status FROM '+source+' AS scheduled JOIN matches AS fixture ON fixture.match_id=scheduled.match_id) AS scheduled_report'
+        cols.append('match_status')
     q=request.args.get('q','').strip()
     field=request.args.get('field','')
     if field and field not in cols: abort(400,'Unknown search field.')
@@ -22,10 +34,11 @@ def reports(name):
         where=' WHERE '+' OR '.join('LOCATE(%s, CAST(`'+c+'` AS CHAR))>0' for c in fields)
         args=[q]*len(fields)
     order='season_id,league_position' if name==VIEWS[5] else 'recorded_goals DESC,player_id' if name in (VIEWS[1],VIEWS[6]) else ','.join('`'+c+'`' for c in cols[:2])
+    if name=='v_scheduled_fixtures': order='kickoff_at,match_id'
     rows=clean(sql('SELECT * FROM '+source+where+' ORDER BY '+order,args))
     if fmt=='json': return jsonify(columns=cols,rows=rows)
     matrix=[[c.replace('_',' ').title() for c in cols]]+[[str(row[c]) if row[c] is not None else '' for c in cols] for row in rows]
-    title=name[2:].replace('_',' ').title()
+    title='Player Goal Comparison' if name=='v_above_any_team_goal_total' else name[2:].replace('_',' ').title()
     if api_football_enabled() and name=='v_player_totals':
         title='Player totals - known subtotals (partial season)'
     if fmt=='csv':
@@ -40,6 +53,14 @@ def reports(name):
         note='API-Football EPL 2023/24: six-club subset; partial player coverage. Blank statistics are unknown.' if api_football_enabled() else 'Course dataset, including fictional sample records.'
         if api_football_enabled() and name=='v_player_totals':
             note+=' Goals and assists sum known values only. Coverage columns count known and unknown appearances; complete observed coverage is not a complete season.'
+        if name=='v_above_any_team_goal_total':
+            note+=' Player Goal Comparison: strict SQL ANY compares known player goal subtotals with at least one club subtotal of recorded player goals, not match scores. Unknown values are not zero; equality does not qualify. Coverage may be partial.'
+            if not rows: note+=' No qualifying rows in this report selection.'
+        if name=='v_scheduled_fixtures':
+            note='Stored SCHEDULED status only; kickoff times are UTC. '+('Premier League 2023/24 is a completed season. Only API-Football records for the six project clubs are included.' if api_football_enabled() else 'Historical/course dataset: is_synthetic=1 identifies fictional Phase II fixtures, not real upcoming matches.')
+            if demo: note='Phase II Demo - Synthetic Fixtures. Synthetic demonstration only: these are fictional fixtures, not real API matches or upcoming games. Kickoff times are UTC.'
+            if not rows:
+                note+=' '+('No scheduled fixtures match the current search. Clear the search to inspect the full scope.' if q else 'No scheduled fixtures are available for the selected season and clubs.')
         doc.build([Paragraph(title,styles['Title']),Paragraph(note,styles['BodyText']),table])
         data=buf.getvalue(); mime='application/pdf'
     return Response(data,mimetype=mime,headers={'Content-Disposition':f'attachment; filename="{name}.{fmt}"'})

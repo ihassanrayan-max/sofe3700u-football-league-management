@@ -96,11 +96,11 @@ FROM tl_players AS p
 JOIN teams AS t ON t.team_id = p.team_id
 JOIN tl_player_match_stats AS s ON s.player_id = p.player_id
 GROUP BY p.player_id, p.full_name, t.team_name
-HAVING COUNT(s.goals)=COUNT(*) AND SUM(s.goals) > ANY (
+HAVING SUM(s.goals) > ANY (
   SELECT SUM(s2.goals)
   FROM tl_players AS p2
   JOIN tl_player_match_stats AS s2 ON s2.player_id = p2.player_id
-  GROUP BY p2.team_id HAVING COUNT(s2.goals)=COUNT(*)
+  GROUP BY p2.team_id
 );
 
 -- View 3: tl_players with a recorded goal.

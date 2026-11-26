@@ -86,7 +86,8 @@ class WorkspaceTests(unittest.TestCase):
             for view in core.VIEWS:
                 response=self.client.get('/api/reports/'+view)
                 self.assertEqual(response.status_code,200)
-                self.assertEqual(response.json,{'columns':['match_id'],'rows':[]})
+                columns=['match_id','match_status'] if view=='v_scheduled_fixtures' else ['match_id']
+                self.assertEqual(response.json,{'columns':columns,'rows':[]})
 
     def test_missing_provider_token_is_actionable(self):
         with patch.dict(core.os.environ,{'API_FOOTBALL_KEY':''}), patch.object(services.af,'urlopen') as provider, patch.object(self.cache,'reserve') as reserve:

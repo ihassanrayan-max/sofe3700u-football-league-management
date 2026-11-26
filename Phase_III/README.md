@@ -327,3 +327,165 @@ Offline regression commands from Phase_III:
 - node --test tests/player_totals_ui.test.js
 - node --check static/ui.js
 - node --check static/guest.js
+
+### Scheduled Fixtures (View 9): accurate empty results
+
+Read-only verification on November 25, 2026 found 30 API-Football EPL 2023/24
+fixtures, all COMPLETED, and no eligible scheduled or unplayed records. The
+provider report correctly returns zero rows. The original v_scheduled_fixtures
+returns two fictional Phase II 2025/26 rows (IDs 11 and 12); these must not be
+mixed into tl_v_scheduled_fixtures. This is expected data coverage, not an SQL
+filter defect. A past kickoff alone does not change stored status.
+
+The report endpoint continues using the existing view for scope and filtering.
+It joins matches by its unique match_id solely to expose actual match_status,
+preserves season_label and all existing columns, and orders by kickoff_at then
+match_id. No SQL view or table definition changed: no migration is required.
+CSV/PDF keep those fields, including empty CSV headers. The UI and empty PDF
+explain the completed season; a search miss instead asks you to clear the search.
+ADMIN/Reader access and Guest denial are unchanged.
+
+The current matches enum supports only SCHEDULED and COMPLETED. The importer
+maps NS to SCHEDULED and FT to COMPLETED; postponed, cancelled, abandoned and
+in-progress responses are skipped, never relabelled as scheduled. Adding those
+states would require a separately reviewed schema/importer enhancement.
+
+For an honest final-report demonstration:
+1. Leave the default API-Football mode unchanged. Open View 9, clear search,
+   and capture the actual zero-row report and its completed-season explanation.
+2. Explain that all 30 imported 2023/24 fixtures are completed; do not use the
+   illustrative three-fixture screenshot as application evidence.
+3. If a nonempty relational-query demonstration is needed, run this SELECT
+   separately in Workbench and caption it 'Fictional Phase II 2025/26 sample,
+   not API-Football results':
+   SELECT * FROM v_scheduled_fixtures ORDER BY kickoff_at,match_id;
+   It currently shows Liverpool–Tottenham (2026-03-07) and Manchester City–Chelsea
+   (2026-03-14). These are stored fictional scheduled statuses, not upcoming games.
+4. The existing football-data.org configuration mode already routes reports to
+   original v_* views, but includes historical/course data. The new explicit demo source described below is separate from that legacy mode;
+   no .env change is needed for either the new source or the Workbench query.
+
+Offline checks also cover canonical SQL filtering, chronological order, provider
+identity, synthetic exclusion, exports and role permissions:
+python -m unittest discover -s tests -v
+node --test tests/player_totals_ui.test.js tests/scheduled_fixtures_ui.test.js
+
+
+### View 9: Phase II Demo — Synthetic Fixtures (optional setup 08)
+
+Report Studio now has a Fixture data source selector for View 9 only:
+- Current provider dataset (default): unchanged API-Football 2023/24 results.
+- Phase II Demo — Synthetic Fixtures: explicitly selected fictional data from
+  MySQL, not JavaScript sample rows. Missing installation returns an actionable
+  message; the app never seeds data or calls an API automatically.
+
+Why separate tables: placing new examples in matches would expose them to
+original all-season views. Setup 08 adds tl_demo_seasons, tl_demo_season_teams,
+tl_demo_fixtures and tl_demo_v_scheduled_fixtures instead. The original 17 tables
+and 25 views remain intact (20 tables / 26 views after installation).
+Team IDs reference existing teams; composite foreign keys enforce demo-season
+membership. AUTO_INCREMENT assigns independent demo match IDs, so their values
+may overlap real match IDs without referring to those real fixtures. The source
+label is always visible. Unique season/fixture keys and insert-if-missing joins
+make reruns idempotent. No original football/user rows or provider mappings are
+inserted, updated or deleted. No demo rows enter any original or API statistics.
+
+Manual MySQL Workbench setup (MySQL 8.0.16+):
+1. Use this code with a complete Touchline database. Keep a private backup.
+   Pause import/manual writers and finish open transactions. Set YOUR schema
+   as default in Workbench (local source: group12_football_phase2; teammates
+   may use a different name). The scripts intentionally contain no USE.
+2. Disable continuation after SQL errors. Run 08_scheduled_demo_preflight.sql.
+   Confirm the selected schema, six named clubs, and authorized CREATE
+   TABLE/VIEW privileges. CREATE OR REPLACE also requires DROP on the demo
+   view; do not grant that privilege to normal application users.
+   First install has no tl_demo_* objects. On reruns inspect SHOW CREATE
+   for all four objects and confirm they match 08; IF NOT EXISTS does not
+   repair incompatible tables. Stop for unexpected definitions or data.
+   Save all preflight counts for comparison.
+3. Open and execute 08_scheduled_demo.sql once. It creates the three isolated
+   tables, seeds one May 2024 demo season, six memberships and three fixtures,
+   then defines the dedicated demo view. On any error STOP and ROLLBACK;
+   inspect partial DDL before retrying. Never rerun Phase II initialization.
+4. Run 08_scheduled_demo_verify.sql. Expect exactly these UTC fixtures:
+   Manchester United vs Arsenal — 2024-05-19 16:00:00
+   Chelsea vs Liverpool — 2024-05-22 19:45:00
+   Tottenham Hotspur vs Manchester City — 2024-05-26 15:00:00
+   All are SCHEDULED and Synthetic demonstration. Expect one demo season,
+   six memberships, three fixtures, no duplicates/orphans, and unchanged
+   original/provider counts. Demo IDs are whatever MySQL allocated.
+   After reviewing objects, rerunning 08 must retain those IDs and counts.
+5. Existing schema-wide app SELECT permissions cover the new objects. If
+   your app uses table-specific grants, ask the owner for SELECT on the four
+   demo objects and teams. No new account, password or .env provider change
+   is required.
+6. Restart Flask and hard-refresh. As ADMIN or Reader open Report Studio,
+   choose 9. Scheduled Fixtures, then Phase II Demo — Synthetic Fixtures.
+   A permanent explanation and Data Source column identify the fiction.
+   Try club search, header sorting and CSV/PDF exports. Paging uses 10 rows
+   per page; these three rows fit on one page. Exports include all matching
+   rows, independent of the displayed page.
+   Direct link: /reports?view=v_scheduled_fixtures&source=phase2-demo
+   Endpoint: /api/reports/v_scheduled_fixtures?source=phase2-demo
+7. Switch back to Current provider dataset: the real completed-season report
+   remains empty. Other reports always use their existing source; demo is
+   rejected for other report endpoints. Guest remains blocked for all
+   formats and direct report requests.
+
+The seed is shipped in Git-readable project files; no hidden local helper is
+needed. Existing teammate exports can be imported normally, then optionally
+apply 08. New exports made after installation must account for the extra three
+tables and view. A screenshot of the real demo page is valid evidence only
+when captioned 'Synthetic demonstration retrieved from MySQL'; it is not
+evidence of real scheduled Premier League games.
+
+Validation is offline: the production seed inserts and SELECT view are tested
+in SQLite with only MySQL DDL syntax adapted, including running the seed twice.
+Live MySQL execution of 08 remains a manual owner action. Run:
+python -m unittest discover -s tests -v
+node --test tests/player_totals_ui.test.js tests/scheduled_fixtures_ui.test.js
+node --check static/ui.js
+
+### View 2 — Player Goal Comparison (manual migration 09)
+
+The visible dropdown, heading and PDF title use Player Goal Comparison. SQL names
+v_above_any_team_goal_total / tl_v_above_any_team_goal_total and the API URL remain
+unchanged. The original Phase II view is untouched.
+
+SQL ANY means a player's known goal subtotal must be strictly greater than at
+least one club's known goal subtotal from the same imported player appearances.
+Club totals are SUM(player goals), not fixture scoreboards. Equality does not
+qualify. SUM ignores unknown values and leaves all-NULL totals unknown; no NULL
+is converted to zero. A comparison with an unknown total is not true. An empty
+comparison set matches nobody. Coverage is partial, not a full-season ranking.
+
+Read-only diagnosis on November 25, 2026: the old API view required COUNT(goals)
+to equal COUNT(*) for both players and clubs. Every club had NULL appearances,
+so it removed all six club comparison totals. Known club subtotals were Chelsea
+11, Liverpool 3, Tottenham 8, Manchester United 1, Arsenal 7 and Manchester City
+10. Removing the completeness guards with a read-only SELECT returned seven
+players: Haaland 5; Jackson and Son 4; Palmer 3; Kulusevski, Rice and Foden 2.
+These are observed snapshot results, not hardcoded application records.
+
+Manual Workbench steps:
+1. Keep a backup, pause writers, and select YOUR Touchline schema. Finish open
+   transactions and disable continuation on errors. Scripts use the selected
+   schema so teammates can use their own database name.
+2. Run 09_player_goal_comparison_preflight.sql. Review the existing definitions,
+   duplicate check, team subtotals and source counts. An authorized account needs
+   CREATE VIEW, DROP on this targeted view, and SELECT on dependencies.
+3. Run 09_player_goal_comparison.sql alone. It is an idempotent forward view
+   replacement, not a data migration; no tables or original Phase II views change.
+   It implicitly commits. Do not rerun migration 06 or reset the database.
+4. Run 09_player_goal_comparison_verify.sql: require zero missing/extra/mismatched
+   rows and unchanged source counts/sums. The number of qualifying players may
+   change as data coverage changes.
+5. Restart Flask and hard-refresh, then open Report Studio -> 2 · Player Goal
+   Comparison. Validate CSV/PDF and the partial-subtotal explanation. Genuine
+   empty results and search misses remain empty and are explained.
+
+This does not change the Scheduled Fixtures demo, authentication, API imports or
+role permissions. Migration 09 has not been executed by the assistant. Before
+it is manually applied, the live report still uses the old view. Tests execute
+the actual aggregate offline using SQLite's MIN equivalent of ANY for selection;
+native MySQL verification of the proposed SELECT was read-only.
