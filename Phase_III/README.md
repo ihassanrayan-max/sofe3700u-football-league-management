@@ -1,242 +1,544 @@
-# Touchline — Installation and Execution Guide
+# ⚽ Touchline — Football League Management & Statistics
 
-Detailed **Windows / PowerShell** instructions for the `touchline-visual-upgrade` branch. See the [main README](../README.md) for features, architecture, and project background.
+Touchline is a full-stack football league management and statistics application developed using Python, Flask, MySQL, HTML, CSS and JavaScript.
 
-Run PowerShell commands in your terminal. Run SQL in MySQL Workbench or another connected MySQL SQL editor.
+The application provides football statistics, league standings, SQL reports, administrative database management and external football API integration.
 
-## 1. Install the prerequisites
+Developed for **SOFE 3700U — Data Management Systems, Fall 2026, Group 20**, at Ontario Tech University.
 
-- **Python 3.11+**, pip, and the Windows `py` launcher.
-- A running **MySQL Server 8.0.16+**. Use MySQL, not MariaDB.
-- MySQL Workbench or another SQL client. The client alone does not install or start a database server.
-- Git and a web browser. VS Code is optional.
-- A direct API-Sports/API-Football key with suitable historical-season access for real-data imports.
+The application and database run locally.
 
-Check Python in PowerShell:
+## 📑 Table of Contents
 
-```powershell
-py --version
+- [Features](#-features)
+- [Technologies](#-technologies)
+- [Prerequisites](#-prerequisites)
+- [Project Structure](#-project-structure)
+- [Installation and Setup](#-installation-and-setup)
+- [Roles and Access](#-roles-and-access)
+- [Using the Application](#-using-the-application)
+- [Testing](#-testing)
+- [Troubleshooting](#-troubleshooting)
+- [Known Limitations](#-known-limitations)
+- [Contributors](#-contributors)
+
+## 💡 Features
+
+- User authentication and session management.
+- Administrator, user and guest access roles.
+- Football standings, match results and scheduled fixtures.
+- Player and team statistics.
+- Ten SQL-based reports.
+- Search, filtering and table sorting.
+- CSV and PDF report exports.
+- Administrative CRUD operations through Data Workbench.
+- External football data preview and import.
+- Interactive charts and data visualization.
+- Frontend and backend data validation.
+- Error handling and role-based access restrictions.
+
+## 📦 Technologies
+
+| Component | Technology |
+| --- | --- |
+| Backend | Python, Flask |
+| Database | MySQL, PyMySQL |
+| Frontend | HTML, CSS, JavaScript, Jinja |
+| Data Visualization | Chart.js |
+| Communication | REST/JSON, Fetch API |
+| External API | API-Football, football-data.org |
+| Data Export | CSV, ReportLab |
+| Configuration | python-dotenv |
+| API Caching | SQLite |
+| Testing | Python unittest, JavaScript |
+
+## 📋 Prerequisites
+
+Install the following before setting up the application:
+
+- Python 3.11 or newer, including pip and the Python launcher.
+- MySQL Server 8.0.16 or newer.
+- MySQL Workbench.
+- Git.
+- Visual Studio Code.
+- A web browser.
+
+Optional:
+
+- Node.js, for JavaScript testing.
+- An API-Football account and API key, for importing real football data.
+
+MySQL Server must be installed and running. MySQL Workbench alone is not sufficient.
+
+## 📁 Project Structure
+
+```text
+sofe3700u-football-league-management/
+│
+├── Phase_III/
+│   ├── static/
+│   ├── templates/
+│   ├── tests/
+│   ├── work/
+│   ├── .env.example
+│   ├── 05_phase3.sql
+│   ├── 06_api_football.sql
+│   ├── 06_api_football_preflight.sql
+│   ├── 06_api_football_verify.sql
+│   ├── 07_player_totals.sql
+│   ├── 07_player_totals_preflight.sql
+│   ├── 07_player_totals_verify.sql
+│   ├── 08_scheduled_demo.sql
+│   ├── 08_scheduled_demo_preflight.sql
+│   ├── 08_scheduled_demo_verify.sql
+│   ├── 09_player_goal_comparison.sql
+│   ├── 09_player_goal_comparison_preflight.sql
+│   ├── 09_player_goal_comparison_verify.sql
+│   ├── api_football.py
+│   ├── app.py
+│   ├── provider_store.py
+│   ├── services.py
+│   ├── wsgi.py
+│   ├── requirements.txt
+│   └── README.md
+│
+├── .gitignore
+├── 01_create_tables.sql
+├── 02_insert_data.sql
+├── 03_create_views.sql
+├── 04_test_queries.sql
+├── ER_diagram.png
+├── ER_diagram.svg
+├── Relational_schema.svg
+└── README.md
 ```
 
-The migration account needs SELECT, INSERT, CREATE, CREATE VIEW, and REFERENCES privileges. The app account needs SELECT/INSERT/UPDATE/DELETE on core tables, SELECT/INSERT/UPDATE on provider tables, and SELECT on the required views and underlying tables. The new views use SQL SECURITY INVOKER.
+The `.env` and `.venv` files/directories are created locally during installation.
 
-## 2. Open the correct branch
+Local database exports, generated credentials and API cache files are not required repository files.
 
-For a new clone:
+## 🚦 Installation and Setup
+
+The following instructions are intended for Windows using Visual Studio Code PowerShell and MySQL Workbench.
+
+Run PowerShell commands in the VS Code terminal and SQL scripts in MySQL Workbench.
+
+### Step 1 — Clone the Repository
+
+Open PowerShell and navigate to the directory where you want to install the project.
+
+Run:
 
 ```powershell
 git clone --branch touchline-visual-upgrade https://github.com/ihassanrayan-max/sofe3700u-football-league-management.git
-cd sofe3700u-football-league-management
 ```
 
-For an existing checkout, open its folder and check:
+Open the cloned repository in Visual Studio Code.
+
+Alternatively, if the repository is already cloned, confirm that you are on the correct branch:
 
 ```powershell
-git status
 git branch --show-current
 ```
 
-If already on this branch with a clean working tree, update it using:
+The intended branch is:
 
-```powershell
-git pull --ff-only origin touchline-visual-upgrade
+```text
+touchline-visual-upgrade
 ```
 
-Resolve local changes or divergent history before updating; do not discard work. Keep your existing `.env`, virtual environment, and database.
+### Step 2 — Configure MySQL Workbench
 
-## 3. Set up MySQL
+1. Open MySQL Workbench.
+2. Create or open a local MySQL connection.
+3. Enter your MySQL connection username and password.
+4. Test the connection.
+5. Connect to the MySQL server.
 
-The application displays Group 20 but retains the database name **group12_football_phase2** for compatibility.
+The standard local configuration is:
 
-### Fresh installation
+| Setting | Value |
+| --- | --- |
+| Hostname | 127.0.0.1 |
+| Port | 3306 |
+| Username | Your MySQL username |
+| Password | Your MySQL password |
+| Project database | touchline_upgrade |
 
-Connect to your MySQL server. Open and execute each entire SQL script in order, checking the output for errors before continuing:
+The original project SQL scripts may reference `group12_football_phase2`. The database used in the current local configuration is `touchline_upgrade`.
+
+For a fresh installation, ensure that the schema creation and all applicable `USE` statements reference the same intended database. If retaining the original database name, use that name consistently in MySQL Workbench and the `.env` file instead.
+
+Do not create two separate project databases unintentionally.
+
+### Step 3 — Initialize the Database
+
+In MySQL Workbench, open and execute the following SQL files individually.
+
+Run the entire contents of each file and check for errors before proceeding to the next file.
+
+#### Core Database Scripts
 
 | Order | File | Purpose |
 | --- | --- | --- |
-| 1 | `01_create_tables.sql` | Creates the schema and core tables |
-| 2 | `02_insert_data.sql` | Inserts users, clubs, seasons, players, and fictional sample statistics |
-| 3 | `03_create_views.sql` | Creates the ten original reporting views |
-| 4 | `Phase_III/05_phase3.sql` | Adds login credentials, web sessions, and legacy import tracking |
+| 1 | `01_create_tables.sql` | Creates the original database and core tables |
+| 2 | `02_insert_data.sql` | Inserts initial sample data |
+| 3 | `03_create_views.sql` | Creates the ten original SQL views |
+| 4 | `04_test_queries.sql` | Verifies the original database and SQL queries |
 
-**Script 01 drops existing project tables. Only use it for a fresh installation.** Script 02 is not a routine startup command.
+Script 04 is a verification script and does not initialize the application database.
 
-Optional: run `04_test_queries.sql` to inspect/check the original seed dataset before imports. Its seed-specific expectations can change after editing data.
+#### Phase III Scripts
 
-The original sample data supports the course database and demo identities. API-Football reports exclude fictional matches, so you do not need to delete the seed data to use the new analytics.
+The following files are located inside the `Phase_III` directory.
 
-### Existing installation
+| Order | File | Purpose |
+| --- | --- | --- |
+| 5 | `05_phase3.sql` | Adds authentication, sessions and import tracking |
+| 6 | `06_api_football_preflight.sql` | Checks readiness for API-Football migration |
+| 7 | `06_api_football.sql` | Adds API-Football tables and views |
+| 8 | `06_api_football_verify.sql` | Verifies API-Football migration |
+| 9 | `07_player_totals_preflight.sql` | Checks player statistics views |
+| 10 | `07_player_totals.sql` | Updates player statistics totals |
+| 11 | `07_player_totals_verify.sql` | Verifies player statistics changes |
+| 12 | `08_scheduled_demo_preflight.sql` | Checks scheduled fixture demonstration setup |
+| 13 | `08_scheduled_demo.sql` | Adds isolated synthetic demonstration fixtures |
+| 14 | `08_scheduled_demo_verify.sql` | Verifies scheduled fixture demonstration data |
+| 15 | `09_player_goal_comparison_preflight.sql` | Checks player goal comparison views |
+| 16 | `09_player_goal_comparison.sql` | Updates player goal comparison |
+| 17 | `09_player_goal_comparison_verify.sql` | Verifies player goal comparison changes |
 
-Do not rerun scripts 01 or 02. Inspect the intended database first:
+For each migration group, execute the preflight, migration and verification scripts in that order.
 
-```sql
-USE group12_football_phase2;
-SHOW FULL TABLES;
-SELECT * FROM v_league_standings;
-SELECT COUNT(*) FROM login_credentials;
+Review the preflight results before applying a migration. Stop if unexpected database objects, permission errors or failed checks are reported.
+
+Migration 07 is already incorporated into the updated migration 06 for fresh installations. Its separate script is provided for updating existing installations and may be run after reviewing its preflight results.
+
+Migration 08 installs the synthetic scheduled fixtures demonstration used in Report Studio.
+
+After executing the scripts, refresh the Schemas panel in MySQL Workbench and confirm that the tables and views exist under the intended database.
+
+**Important:**
+
+- Script 01 can drop existing project tables.
+- Do not rerun scripts 01 and 02 on an existing installation.
+- Migration 06 is intended to be applied once.
+- Back up an existing database before applying migrations.
+- Do not blindly rerun a failed migration.
+- Ensure that the selected database and `.env` database name match.
+- SQL scripts do not need to be executed again every time the application is started.
+
+Additional migration-specific instructions are available in [Phase_III/README.md](Phase_III/README.md).
+
+### Step 4 — Navigate to the Application Directory
+
+Open a PowerShell terminal in Visual Studio Code.
+
+If the terminal is currently in the directory containing the cloned repository, run:
+
+```powershell
+cd sofe3700u-football-league-management/Phase_III
 ```
 
-If the Phase III credential/session/import tables are missing, apply script 05. Its CREATE TABLE IF NOT EXISTS statements preserve existing contents.
-
-### API-Football migration — first run only
-
-Keep `TOUCHLINE_PROVIDER=football-data.org` until the migration succeeds. If already fully migrated, skip this section.
-
-1. Stop Flask and every other database writer.
-2. Back up the whole schema, including tables, data, views, credentials, and sessions, to a private file outside Git. Use your SQL client's export feature or `mysqldump --result-file`; avoid PowerShell redirection that may produce UTF-16 output. Verify export completion and test restoration only on a separate disposable database/server.
-3. Execute `Phase_III/06_api_football_preflight.sql`. This is a read-only checklist; inspect each result.
-4. Confirm MySQL version, enabled foreign-key checks, one Premier League competition, the six named clubs, and no existing `provider_*`/`tl_*` objects or Premier League 2023/24 season.
-5. Save the baseline counts privately. A standard installation after script 05 has **11 tables and 10 views**. Local backup tables increase this count; identify them instead of deleting them to match a number.
-6. Configure the SQL client to **stop execution on errors**. With the database owner's authorization, execute all of `06_api_football.sql` once.
-7. On an error, stop and run `ROLLBACK;` in the same connection for any uncommitted data changes. MySQL DDL commits implicitly: earlier CREATE statements and committed data remain. Review the partial state before proceeding; do not blindly rerun the migration.
-8. Execute `06_api_football_verify.sql`. Expect **six new tables and fifteen new views**: normally **17 tables and 25 views**. Seasons increase by one and memberships by six; existing matches, players, users, credentials, and legacy links remain unchanged.
-9. Verify the new views are readable using the application account. Before imports, most scoped reports are empty and standings show six zero-played teams.
-
-**Fresh-install baseline:** comments in the preflight/verification files mention 30 legacy imports because those checks were originally written for an existing deployment. A fresh seed installation has **zero legacy imports**, which is expected. The migration copies the legacy links that actually exist; importing 30 old matches is not a prerequisite. Compare against your recorded baseline and require zero missing/changed links. Unexpected objects, orphan links, triggers, or partial migrations still need review.
-
-The migration preserves the original ten views and adds six provider tables, five helper views, and ten scoped report views. Do not rerun it to start Flask or update the frontend.
-
-## 4. Install Python dependencies
-
-From the repository root:
+If the terminal is already inside the repository root, run:
 
 ```powershell
 cd Phase_III
-py -m venv .venv
-.\.venv\Scripts\python -m pip install -r requirements.txt
 ```
 
-Skip `cd Phase_III` if your terminal path already ends there. Skip environment creation if `.venv` already exists.
+If the terminal path already ends in `Phase_III`, skip this step.
 
-**All remaining PowerShell commands run from Phase_III.** Calling the environment's Python directly means activation is not required.
+All remaining PowerShell commands should be executed from inside `Phase_III`.
 
-## 5. Configure .env
+### Step 5 — Create the Python Virtual Environment
 
-Create a private configuration file without overwriting existing values, then generate a random secret:
+Run:
+
+```powershell
+py -m venv .venv
+```
+
+This creates a local Python virtual environment for the application.
+
+Skip this command if a functioning `.venv` already exists.
+
+### Step 6 — Install Python Dependencies
+
+Run the following commands:
+
+```powershell
+& ".\.venv\Scripts\python.exe" -m pip install -r requirements.txt
+```
+
+```powershell
+& ".\.venv\Scripts\python.exe" -m pip install PyMySQL python-dotenv
+```
+
+Verify that the dependencies are available:
+
+```powershell
+& ".\.venv\Scripts\python.exe" -c "import flask, pymysql, dotenv; print('Dependencies OK')"
+```
+
+Expected output:
+
+```text
+Dependencies OK
+```
+
+The virtual environment does not need to be activated manually when its Python executable is called directly.
+
+### Step 7 — Configure Environment Variables
+
+Locate `.env.example` inside `Phase_III`.
+
+Duplicate the file and rename the duplicate to `.env`.
+
+Alternatively, run:
 
 ```powershell
 if (-not (Test-Path .env)) { Copy-Item .env.example .env }
-.\.venv\Scripts\python -c "import secrets; print(secrets.token_hex(32))"
 ```
 
-Open `Phase_III/.env` in your editor. For a successfully migrated API-Football installation, fill in:
+Open the newly created `.env` file in Visual Studio Code.
+
+Generate a random Flask secret key:
+
+```powershell
+& ".\.venv\Scripts\python.exe" -c "import secrets; print(secrets.token_hex(32))"
+```
+
+Copy the generated value into the `SECRET_KEY` field.
+
+Configure the remaining environment variables as follows:
 
 ```dotenv
 MYSQL_HOST=127.0.0.1
 MYSQL_PORT=3306
-MYSQL_USER=your_existing_mysql_username
+MYSQL_USER=your_mysql_username
 MYSQL_PASSWORD=your_mysql_password
-MYSQL_DATABASE=group12_football_phase2
-SECRET_KEY=paste_your_generated_secret_here
+MYSQL_DATABASE=touchline_upgrade
+
+SECRET_KEY=your_generated_secret_key
+
+FOOTBALL_DATA_TOKEN=
+
+API_FOOTBALL_KEY=
+API_FOOTBALL_DAILY_LIMIT=90
 
 TOUCHLINE_PROVIDER=api-football
-API_FOOTBALL_KEY=your_direct_api_sports_key
-API_FOOTBALL_DAILY_LIMIT=90
-FOOTBALL_DATA_TOKEN=
 ```
 
-| Variable | Meaning |
+Replace the placeholder values with your own information.
+
+| Variable | Description |
 | --- | --- |
-| MYSQL_HOST / MYSQL_PORT | Same server and port as your successful SQL-client connection |
-| MYSQL_USER / MYSQL_PASSWORD | Existing MySQL account, not your website login |
-| MYSQL_DATABASE | Keep `group12_football_phase2` |
-| SECRET_KEY | Stable random value used to sign session cookies |
-| TOUCHLINE_PROVIDER | `api-football` after migration; otherwise `football-data.org` |
-| API_FOOTBALL_KEY | Direct API-Sports key, not a RapidAPI credential |
-| API_FOOTBALL_DAILY_LIMIT | Local rolling 24-hour request cap; default 90, maximum 100 |
-| FOOTBALL_DATA_TOKEN | Only used by the legacy football-data.org importer |
+| `MYSQL_HOST` | MySQL server hostname |
+| `MYSQL_PORT` | MySQL connection port |
+| `MYSQL_USER` | Your MySQL connection username |
+| `MYSQL_PASSWORD` | Your MySQL connection password |
+| `MYSQL_DATABASE` | Name of the project database created in Workbench |
+| `SECRET_KEY` | Randomly generated Flask session secret |
+| `FOOTBALL_DATA_TOKEN` | Legacy football-data.org API token |
+| `API_FOOTBALL_KEY` | API-Football API key |
+| `API_FOOTBALL_DAILY_LIMIT` | Local rolling API request limit |
+| `TOUCHLINE_PROVIDER` | Selected external football data provider |
 
-Find your MySQL username in the connection settings or run `SELECT CURRENT_USER();` in the SQL editor. For `root@localhost`, use `root`. The example username `group12` is not created automatically.
+The MySQL username and password must match the credentials used to connect through MySQL Workbench.
 
-Obtain a provider account/key from [API-Football](https://www.api-football.com/). Confirm that your account can access league 39, season 2023, and the fixtures, player-statistics, and team-statistics endpoints. The repository does not guarantee subscription coverage.
+Only select `api-football` after the required API-Football migration has been successfully completed.
 
-You can sign in and view already-saved MySQL data without an API key. Uncached provider requests need a valid key. For legacy mode, leave `TOUCHLINE_PROVIDER=football-data.org` and configure `FOOTBALL_DATA_TOKEN` only if importing.
+Keep the original `.env.example` file unchanged.
 
-Save the file. Existing process environment variables override `.env`; restart Flask after changes. Keep this file private and out of Git.
+Do not upload `.env`, database passwords, secret keys or API keys to GitHub.
 
-## 6. Generate website passwords
+### Step 8 — Configure the External Football API
 
-On a new installation with the seeded users:
+An API key is required to retrieve new, uncached football data. It is not required to sign in or view records already stored in MySQL.
 
-```powershell
-.\.venv\Scripts\python -m flask --app wsgi demo-accounts
+To enable real football data imports:
+
+1. Visit https://www.api-football.com/.
+2. Create an API-Football account.
+3. Obtain a direct API-Sports API key.
+4. Open the local `.env` file.
+5. Enter the key into `API_FOOTBALL_KEY`.
+6. Ensure that the selected provider is `api-football`.
+
+```dotenv
+API_FOOTBALL_KEY=your_api_key
+API_FOOTBALL_DAILY_LIMIT=90
+TOUCHLINE_PROVIDER=api-football
 ```
 
-This stores salted password hashes and prints newly generated passwords once. Save them privately.
+Ensure that your API account supports the required historical season and statistics endpoints.
 
-| Role | Email | Access |
-| --- | --- | --- |
-| ADMIN | `admin.one@example.com` | Analytics, reports/exports, CRUD, imports |
-| USER | `reader.one@example.com` | Analytics and reports/exports |
-| GUEST | `guest.one@example.com` | Read-only team directory with name/city filtering |
+The legacy football-data.org provider is also supported:
 
-Rerunning the command preserves existing passwords. If an account produces no output, use its saved password.
-
-For deliberate recovery of **all three existing demo passwords**:
-
-```powershell
-.\.venv\Scripts\python -m flask --app wsgi reset-demo-passwords
+```dotenv
+FOOTBALL_DATA_TOKEN=your_legacy_api_token
+TOUCHLINE_PROVIDER=football-data.org
 ```
 
-Run this only when you intend to replace all three passwords. It requires an interactive local terminal without output redirection, validates the expected identities, and displays the new passwords once. It is not a routine startup step.
+Legacy mode can display the original sample dataset without performing new imports.
 
-## 7. Start and open the application
+Restart Flask after modifying `.env`.
 
-```powershell
-.\.venv\Scripts\python -m flask --app wsgi run --host 127.0.0.1 --port 5000
-```
+### Step 9 — Generate Website Login Credentials
 
-Open **http://127.0.0.1:5000/login**, then use a demo email and its generated password.
-
-Leave the terminal running. Press **Ctrl+C** to stop. For subsequent runs, start MySQL if needed and use the same Flask command; do not recreate tables or credentials.
-
-After code/configuration changes, restart Flask and press **Ctrl+Shift+R** in your browser to reload the frontend. This starts a local development server, not production hosting.
-
-## 8. Import real fixtures and statistics
-
-These steps require ADMIN, the completed migration, and API-Football mode.
-
-1. Open **Fixture Imports**.
-2. Choose **Six-club fixtures**, then **Fetch preview**.
-3. Review returned clubs, dates, status, and scores. Click **Save preview** to write the snapshot to MySQL.
-4. Choose **Next 2 fixtures: players + statistics**, then fetch and save that preview.
-5. Repeat enrichment batches while completed fixtures remain pending and quota allows.
-6. Inspect saved history and **Team statistics**, then revisit Overview and player reports.
-
-The importer requests `/fixtures?league=39&season=2023`, followed by `/fixtures/players` and `/fixtures/statistics` for up to two saved completed fixtures per enrichment batch.
-
-A preview does not save imported records to MySQL, but can consume quota and write cache/session state. API-Football snapshots expire after **one hour**; saving uses that exact snapshot without refetching. Expired/mismatched previews require a fresh preview.
-
-Successful responses cache for **seven days** in ignored `work/api-football.sqlite3`. The file also records the rolling 24-hour budget and ten-requests-per-minute limit. Failed calls consume budget. A complete 30-match enrichment normally requires 61 calls before extra cache misses or errors. Other applications using the same key consume provider quota too; adjust the local allowance accordingly. Do not delete the ledger to bypass limits.
-
-### Data scope and interpretation
-
-- Both clubs must be among Arsenal, Chelsea, Liverpool, Manchester City, Manchester United, and Tottenham Hotspur.
-- A full home/away schedule for the subset has 30 fixtures; no records are invented to meet this count.
-- Standings represent a six-club mini-league, not the official EPL table.
-- Player totals cover only imported appearances from those fixtures, not all 38 league games.
-- Enrichment is separate from fixture import. Player reports may be empty until it is saved.
-- Unknown values remain NULL; explicit zero stays zero. Missing/zero minutes do not generate invented appearances.
-- Synthetic/legacy records stay in the database but are excluded from new-mode analytics.
-- Imported historical profiles/statistics use separate provider tables; the original player CRUD form does not manage them.
-- Switching the provider flag back to `football-data.org` restores legacy report scope without deleting new data. Legacy analytics can include fictional seed records.
-
-## 9. Verify the installation
-
-1. ADMIN: inspect Overview, Match Centre, all ten reports, filters, and CSV/PDF exports.
-2. ADMIN: inspect Data Workbench; test writes with disposable records in a suitable test database.
-3. ADMIN: check saved imports and available player/team enrichment.
-4. USER: confirm analytics/exports work and management/import pages are denied.
-5. GUEST: confirm only the team directory appears; search/filter works and analytics/report/export routes are denied.
-6. Sign out and check protected API requests require authentication.
-
-Automated checks from `Phase_III`:
+Run:
 
 ```powershell
-.\.venv\Scripts\python -m unittest discover -s tests -v
+& ".\.venv\Scripts\python.exe" -m flask --app wsgi demo-accounts
 ```
 
-Optional JavaScript syntax checks, with Node.js installed:
+On a fresh installation, this command generates and displays passwords for the demo accounts.
+
+Save the displayed credentials privately.
+
+| Role | Email |
+| --- | --- |
+| ADMIN | admin.one@example.com |
+| USER | reader.one@example.com |
+| GUEST | guest.one@example.com |
+
+If the credentials have already been generated, the command will not necessarily display new passwords. Use the previously saved credentials.
+
+If the existing passwords have been lost, they can be deliberately reset using:
+
+```powershell
+& ".\.venv\Scripts\python.exe" -m flask --app wsgi reset-demo-passwords
+```
+
+This replaces all three demo account passwords. Only use it when password recovery is necessary.
+
+Run the reset command directly in an interactive terminal.
+
+### Step 10 — Run the Application
+
+Start the Flask development server:
+
+```powershell
+& ".\.venv\Scripts\python.exe" -m flask --app wsgi run
+```
+
+Once the server has started, open the following URL in a web browser:
+
+```text
+http://127.0.0.1:5000/login
+```
+
+Sign in using one of the demo accounts and its generated password.
+
+Keep the PowerShell terminal running while using the application.
+
+To stop the application, press:
+
+```text
+Ctrl + C
+```
+
+### Subsequent Application Startup
+
+After the initial installation, ensure MySQL Server is running and open PowerShell inside `Phase_III`.
+
+Run:
+
+```powershell
+& ".\.venv\Scripts\python.exe" -m flask --app wsgi run
+```
+
+Open:
+
+```text
+http://127.0.0.1:5000/login
+```
+
+There is no need to recreate the database, reinstall dependencies, regenerate passwords or rerun migrations during normal startup.
+
+## 🔐 Roles and Access
+
+| Role | Access |
+| --- | --- |
+| ADMIN | Dashboard, matches, statistics, reports, exports, CRUD operations and API imports |
+| USER | Dashboard, matches, statistics, reports and exports |
+| GUEST | Read-only team directory with name search and city filtering |
+
+Administrative operations are restricted through backend role validation.
+
+Guest accounts cannot access administrative features, match statistics, charts, reports or exports.
+
+## ⚽ Using the Application
+
+### Overview and Match Centre
+
+View league standings, match results, team comparisons, player statistics and scheduled fixtures.
+
+### Report Studio
+
+Select one of the ten available SQL reports:
+
+1. Match Details
+2. Player Goal Comparison
+3. Players Who Scored
+4. Match Statistics Coverage
+5. Players With Goals or Assists
+6. League Standings
+7. Player Statistics Totals
+8. Match Results
+9. Scheduled Fixtures
+10. Home and Away Performance
+
+Reports support searching, filtering, sorting and CSV/PDF exports.
+
+For Scheduled Fixtures, select the appropriate data source. Synthetic demonstration fixtures are explicitly labelled and kept separate from real football statistics.
+
+### Data Workbench
+
+Sign in as ADMIN to create, read, update and delete records in supported database tables.
+
+Use disposable records when demonstrating CRUD operations to avoid modifying important project data.
+
+### Importing Real Football Data
+
+Sign in as ADMIN and ensure API-Football mode is configured.
+
+1. Open Fixture Imports.
+2. Select Six-club fixtures.
+3. Click Fetch preview.
+4. Review the returned fixture information.
+5. Click Save preview to store the data in MySQL.
+6. Select Next 2 fixtures: players + statistics.
+7. Fetch and save the statistics preview.
+8. Repeat while fixtures remain pending and the API quota permits.
+9. Review the saved import history and team statistics.
+10. Return to Overview or Report Studio to inspect the updated data.
+
+Importing fixtures does not automatically import all player statistics. Player and team enrichment must be performed separately.
+
+## 🧪 Testing
+
+The final project report documents 71 passing Python tests and 2 passing JavaScript regression tests, alongside successful JavaScript syntax checks.
+
+Manual testing was also performed for authentication, role management, CRUD operations, SQL reports, searching, exports, API integration and data validation.
+
+### Python Tests
+
+From inside `Phase_III`, run:
+
+```powershell
+& ".\.venv\Scripts\python.exe" -m unittest discover -s tests -v
+```
+
+### JavaScript Regression Tests
+
+If Node.js is installed, run:
+
+```powershell
+node --test tests/player_totals_ui.test.js tests/scheduled_fixtures_ui.test.js
+```
+
+### JavaScript Syntax Checks
 
 ```powershell
 node --check static/ui.js
@@ -244,248 +546,88 @@ node --check static/guest.js
 node --check static/chart.umd.min.js
 ```
 
-The suite uses mocks and isolated in-memory data. It does not establish live MySQL migration success, API subscription access, or browser layout quality on your machine.
+Automated tests use mocks or isolated data and do not independently establish that a local MySQL installation or API subscription is correctly configured.
 
-## REST API reference
+### Manual Verification
 
-| Endpoint | Method | Access and purpose |
-| --- | --- | --- |
-| `/api/login`, `/api/logout` | POST | Start/end a session |
-| `/api/teams?q=...&city=...` | GET | Authenticated team directory; basic team fields only |
-| `/api/reports/{view}` | GET | ADMIN/USER; JSON/CSV/PDF, optional q, field, format |
-| `/api/records/{table}` | GET, POST | ADMIN; list/create core records |
-| `/api/records/{table}/{key}` | GET, PUT, DELETE | ADMIN; read/update/delete a core record |
-| `/api/import/preview` | POST | ADMIN; preview fixtures or enrichment |
-| `/api/import/save` | POST | ADMIN; save snapshot with its preview_id in API-Football mode |
-| `/api/import/history` | GET | ADMIN; saved imports |
-| `/api/import/statistics?match_id=...` | GET | ADMIN; saved team statistics in API-Football mode |
+After installation, verify that:
 
-Writes require the session CSRF token in `X-CSRF-Token`; the interface supplies it. Composite record keys use comma-separated primary-key values. Backend allowlists constrain table/view names and query values use bound parameters.
+- All three demo accounts can access their permitted interfaces.
+- All ten SQL reports can be executed.
+- Search, filtering and sorting work.
+- CSV and PDF exports work.
+- Administrators can perform CRUD operations.
+- API data can be previewed and saved when a valid key is configured.
+- Restricted operations are denied for unauthorized users.
+- Logout terminates the current session.
 
-## Troubleshooting
+## 🔧 Troubleshooting
 
-| Problem | Resolution |
+| Problem | Solution |
 | --- | --- |
-| Cannot find Phase_III/Phase_III | You are already in Phase_III; skip the cd command. |
-| py not recognized | Install Python with its launcher, then reopen the terminal. |
-| Virtual-environment Python not found | Check the directory and create .venv in step 4. |
-| Module not found | Install requirements with the virtual environment's Python. |
-| MySQL connection refused | Start MySQL Server and check host/port. |
-| MySQL access denied | Correct database credentials/permissions, not the website password. |
-| Unknown database | Initialize the schema on the server configured in .env. |
-| Missing login_credentials/web_sessions | Apply script 05 to the correct database; do not rerun script 01. |
-| Missing tl_* or provider_* object | Provider mode was enabled before complete migration; return to legacy mode and review migration state. |
-| Object already exists in script 06 | Stop and review an existing/partial migration; do not drop objects or blindly rerun. |
-| Demo command prints no passwords | Credentials exist; use saved passwords or deliberately reset them. |
-| Port 5000 in use | Stop the old Flask process, or use --port 5001 and browse to that port. |
-| Import authentication/coverage error | Check the direct API-Sports key and season/endpoint subscription access. |
-| Quota/rate-limit error | Wait for the allowance window, check provider usage, and preserve the local ledger. |
-| Player reports empty | Save enrichment after fixtures; coverage may also be absent. |
-| Guest sees no analytics | Expected: Guest can only use the team directory. |
-| Old design or configuration | Restart Flask, hard-refresh, and check process variables overriding .env. |
+| Python command not recognized | Install Python with the Windows Python launcher and reopen the terminal. |
+| Cannot find Phase_III | Check the current terminal directory before using the cd command. |
+| Virtual environment not found | Run `py -m venv .venv` from inside Phase_III. |
+| Missing Python module | Reinstall dependencies using the virtual environment's Python executable. |
+| MySQL connection refused | Ensure MySQL Server is running and check the configured host and port. |
+| MySQL access denied | Verify the MySQL username, password and permissions in `.env`. |
+| Unknown database | Verify that the database exists and its name matches `MYSQL_DATABASE`. |
+| Missing database tables or views | Verify that the required SQL scripts were successfully executed against the correct schema. |
+| Migration reports existing objects | Stop and inspect the existing migration state before proceeding. |
+| Demo accounts command displays nothing | Use previously generated passwords or deliberately reset the demo passwords. |
+| API authentication error | Verify the API key and selected provider. |
+| API quota exceeded | Wait for the quota allowance to reset and avoid unnecessary repeated imports. |
+| Player statistics missing | Import player statistics enrichment after saving fixtures. Some provider statistics may be unavailable. |
+| Scheduled Fixtures report is empty | The imported season may contain only completed fixtures. Select the labelled synthetic demonstration source if required. |
+| Guest account cannot view analytics | This is expected role-based behaviour. |
+| Application changes are not visible | Restart Flask and hard-refresh the browser using Ctrl + Shift + R. |
 
-Keep API keys, passwords, database dumps, generated credentials, and cache files out of Git. Another contributor's successful migration or import does not establish the state of your own installation.
+If port 5000 is already occupied, run Flask on an alternative port:
 
-### Known player subtotals (migration 07)
+```powershell
+& ".\.venv\Scripts\python.exe" -m flask --app wsgi run --port 5001
+```
 
-Player Totals and Recorded goal leaders sum available numeric statistics across
-qualifying imported appearances. SQL SUM ignores NULL but leaves all-NULL groups
-NULL; explicit zero remains zero. Goal and assist coverage are independent.
-Complete observed coverage means all qualifying imported appearances have a
-numeric value, not that the full season has been enriched. CSV includes the four
-coverage columns; PDF includes those columns and a partial-season explanation.
+Then open:
 
-For an existing database, apply only migration 07, not migration 06:
-1. Keep a current private backup and pause imports/manual edits while comparing
-   preflight and verification results. Finish any open Workbench transaction.
-2. Connect in MySQL Workbench using an authorized account. Set
-   group12_football_phase2 as the default schema.
-3. Open and run 07_player_totals_preflight.sql. Require database_matches=1,
-   MySQL 8, the four expected views, and no duplicate appearance keys.
-   Review the existing view definition and save the counts for comparison.
-   The account needs CREATE VIEW, DROP on the targeted view, and SELECT on its
-   dependencies. If permissions are missing, stop and ask the database owner;
-   do not broaden the Flask account privileges.
-4. Open 07_player_totals.sql, review it, then execute that file alone.
-   Its only schema change is CREATE OR REPLACE of tl_v_player_totals with
-   SQL SECURITY INVOKER. It is repeatable and implicitly commits; it does not
-   insert, update, delete, or rebuild table records or original Phase II views.
-5. Run 07_player_totals_verify.sql. Require zero mismatch rows, unchanged
-   source counts/sums, and all ten original views. Review partial subtotals.
-6. Restart Flask for the updated export text and hard-refresh the browser.
-   Check Player Totals, its CSV/PDF exports, and Recorded goal leaders.
-   Unknown totals should remain blank in exports and a dash on screen.
-   Guest report access must still return 403.
+```text
+http://127.0.0.1:5001/login
+```
 
-Migration 07 has not been executed automatically. Fresh installations use the
-updated canonical view in 06_api_football.sql; existing installations use 07.
-No API requests or additional imports are needed to recover known subtotals.
-Additional enrichment is a separate, quota-consuming action.
+Additional technical troubleshooting and migration instructions can be found in [Phase_III/README.md](Phase_III/README.md).
 
-Offline regression commands from Phase_III:
-- python -m unittest discover -s tests -v
-- node --test tests/player_totals_ui.test.js
-- node --check static/ui.js
-- node --check static/guest.js
+## ⚠️ Known Limitations
 
-### Scheduled Fixtures (View 9): accurate empty results
+- Real football data is limited to the 2023/24 Premier League matches between six selected clubs:
+  - Arsenal
+  - Chelsea
+  - Liverpool
+  - Manchester City
+  - Manchester United
+  - Tottenham Hotspur
+- League standings represent the selected six-club subset rather than the complete Premier League.
+- API request restrictions and data availability may result in incomplete player statistics.
+- Unknown statistics are not treated as confirmed zero values.
+- Original sample data and scheduled demonstration fixtures are fictional and are kept separate from real API-Football analytics.
+- The application runs locally and is not configured for production deployment.
 
-Read-only verification on November 25, 2026 found 30 API-Football EPL 2023/24
-fixtures, all COMPLETED, and no eligible scheduled or unplayed records. The
-provider report correctly returns zero rows. The original v_scheduled_fixtures
-returns two fictional Phase II 2025/26 rows (IDs 11 and 12); these must not be
-mixed into tl_v_scheduled_fixtures. This is expected data coverage, not an SQL
-filter defect. A past kickoff alone does not change stored status.
+## 👥 Contributors
 
-The report endpoint continues using the existing view for scope and filtering.
-It joins matches by its unique match_id solely to expose actual match_status,
-preserves season_label and all existing columns, and orders by kickoff_at then
-match_id. No SQL view or table definition changed: no migration is required.
-CSV/PDF keep those fields, including empty CSV headers. The UI and empty PDF
-explain the completed season; a search miss instead asks you to clear the search.
-ADMIN/Reader access and Guest denial are unchanged.
+SOFE 3700U — Data Management Systems, Group 20
 
-The current matches enum supports only SCHEDULED and COMPLETED. The importer
-maps NS to SCHEDULED and FT to COMPLETED; postponed, cancelled, abandoned and
-in-progress responses are skipped, never relabelled as scheduled. Adding those
-states would require a separately reviewed schema/importer enhancement.
+- Ibrahim Syed
+- Mahir Patel
+- Muska Ebadi
+- Hassan Rayan
 
-For an honest final-report demonstration:
-1. Leave the default API-Football mode unchanged. Open View 9, clear search,
-   and capture the actual zero-row report and its completed-season explanation.
-2. Explain that all 30 imported 2023/24 fixtures are completed; do not use the
-   illustrative three-fixture screenshot as application evidence.
-3. If a nonempty relational-query demonstration is needed, run this SELECT
-   separately in Workbench and caption it 'Fictional Phase II 2025/26 sample,
-   not API-Football results':
-   SELECT * FROM v_scheduled_fixtures ORDER BY kickoff_at,match_id;
-   It currently shows Liverpool–Tottenham (2026-03-07) and Manchester City–Chelsea
-   (2026-03-14). These are stored fictional scheduled statuses, not upcoming games.
-4. The existing football-data.org configuration mode already routes reports to
-   original v_* views, but includes historical/course data. The new explicit demo source described below is separate from that legacy mode;
-   no .env change is needed for either the new source or the Workbench query.
+Ontario Tech University — Fall 2026.
 
-Offline checks also cover canonical SQL filtering, chronological order, provider
-identity, synthetic exclusion, exports and role permissions:
-python -m unittest discover -s tests -v
-node --test tests/player_totals_ui.test.js tests/scheduled_fixtures_ui.test.js
+## 📖 Additional Documentation
 
-
-### View 9: Phase II Demo — Synthetic Fixtures (optional setup 08)
-
-Report Studio now has a Fixture data source selector for View 9 only:
-- Current provider dataset (default): unchanged API-Football 2023/24 results.
-- Phase II Demo — Synthetic Fixtures: explicitly selected fictional data from
-  MySQL, not JavaScript sample rows. Missing installation returns an actionable
-  message; the app never seeds data or calls an API automatically.
-
-Why separate tables: placing new examples in matches would expose them to
-original all-season views. Setup 08 adds tl_demo_seasons, tl_demo_season_teams,
-tl_demo_fixtures and tl_demo_v_scheduled_fixtures instead. The original 17 tables
-and 25 views remain intact (20 tables / 26 views after installation).
-Team IDs reference existing teams; composite foreign keys enforce demo-season
-membership. AUTO_INCREMENT assigns independent demo match IDs, so their values
-may overlap real match IDs without referring to those real fixtures. The source
-label is always visible. Unique season/fixture keys and insert-if-missing joins
-make reruns idempotent. No original football/user rows or provider mappings are
-inserted, updated or deleted. No demo rows enter any original or API statistics.
-
-Manual MySQL Workbench setup (MySQL 8.0.16+):
-1. Use this code with a complete Touchline database. Keep a private backup.
-   Pause import/manual writers and finish open transactions. Set YOUR schema
-   as default in Workbench (local source: group12_football_phase2; teammates
-   may use a different name). The scripts intentionally contain no USE.
-2. Disable continuation after SQL errors. Run 08_scheduled_demo_preflight.sql.
-   Confirm the selected schema, six named clubs, and authorized CREATE
-   TABLE/VIEW privileges. CREATE OR REPLACE also requires DROP on the demo
-   view; do not grant that privilege to normal application users.
-   First install has no tl_demo_* objects. On reruns inspect SHOW CREATE
-   for all four objects and confirm they match 08; IF NOT EXISTS does not
-   repair incompatible tables. Stop for unexpected definitions or data.
-   Save all preflight counts for comparison.
-3. Open and execute 08_scheduled_demo.sql once. It creates the three isolated
-   tables, seeds one May 2024 demo season, six memberships and three fixtures,
-   then defines the dedicated demo view. On any error STOP and ROLLBACK;
-   inspect partial DDL before retrying. Never rerun Phase II initialization.
-4. Run 08_scheduled_demo_verify.sql. Expect exactly these UTC fixtures:
-   Manchester United vs Arsenal — 2024-05-19 16:00:00
-   Chelsea vs Liverpool — 2024-05-22 19:45:00
-   Tottenham Hotspur vs Manchester City — 2024-05-26 15:00:00
-   All are SCHEDULED and Synthetic demonstration. Expect one demo season,
-   six memberships, three fixtures, no duplicates/orphans, and unchanged
-   original/provider counts. Demo IDs are whatever MySQL allocated.
-   After reviewing objects, rerunning 08 must retain those IDs and counts.
-5. Existing schema-wide app SELECT permissions cover the new objects. If
-   your app uses table-specific grants, ask the owner for SELECT on the four
-   demo objects and teams. No new account, password or .env provider change
-   is required.
-6. Restart Flask and hard-refresh. As ADMIN or Reader open Report Studio,
-   choose 9. Scheduled Fixtures, then Phase II Demo — Synthetic Fixtures.
-   A permanent explanation and Data Source column identify the fiction.
-   Try club search, header sorting and CSV/PDF exports. Paging uses 10 rows
-   per page; these three rows fit on one page. Exports include all matching
-   rows, independent of the displayed page.
-   Direct link: /reports?view=v_scheduled_fixtures&source=phase2-demo
-   Endpoint: /api/reports/v_scheduled_fixtures?source=phase2-demo
-7. Switch back to Current provider dataset: the real completed-season report
-   remains empty. Other reports always use their existing source; demo is
-   rejected for other report endpoints. Guest remains blocked for all
-   formats and direct report requests.
-
-The seed is shipped in Git-readable project files; no hidden local helper is
-needed. Existing teammate exports can be imported normally, then optionally
-apply 08. New exports made after installation must account for the extra three
-tables and view. A screenshot of the real demo page is valid evidence only
-when captioned 'Synthetic demonstration retrieved from MySQL'; it is not
-evidence of real scheduled Premier League games.
-
-Validation is offline: the production seed inserts and SELECT view are tested
-in SQLite with only MySQL DDL syntax adapted, including running the seed twice.
-Live MySQL execution of 08 remains a manual owner action. Run:
-python -m unittest discover -s tests -v
-node --test tests/player_totals_ui.test.js tests/scheduled_fixtures_ui.test.js
-node --check static/ui.js
-
-### View 2 — Player Goal Comparison (manual migration 09)
-
-The visible dropdown, heading and PDF title use Player Goal Comparison. SQL names
-v_above_any_team_goal_total / tl_v_above_any_team_goal_total and the API URL remain
-unchanged. The original Phase II view is untouched.
-
-SQL ANY means a player's known goal subtotal must be strictly greater than at
-least one club's known goal subtotal from the same imported player appearances.
-Club totals are SUM(player goals), not fixture scoreboards. Equality does not
-qualify. SUM ignores unknown values and leaves all-NULL totals unknown; no NULL
-is converted to zero. A comparison with an unknown total is not true. An empty
-comparison set matches nobody. Coverage is partial, not a full-season ranking.
-
-Read-only diagnosis on November 25, 2026: the old API view required COUNT(goals)
-to equal COUNT(*) for both players and clubs. Every club had NULL appearances,
-so it removed all six club comparison totals. Known club subtotals were Chelsea
-11, Liverpool 3, Tottenham 8, Manchester United 1, Arsenal 7 and Manchester City
-10. Removing the completeness guards with a read-only SELECT returned seven
-players: Haaland 5; Jackson and Son 4; Palmer 3; Kulusevski, Rice and Foden 2.
-These are observed snapshot results, not hardcoded application records.
-
-Manual Workbench steps:
-1. Keep a backup, pause writers, and select YOUR Touchline schema. Finish open
-   transactions and disable continuation on errors. Scripts use the selected
-   schema so teammates can use their own database name.
-2. Run 09_player_goal_comparison_preflight.sql. Review the existing definitions,
-   duplicate check, team subtotals and source counts. An authorized account needs
-   CREATE VIEW, DROP on this targeted view, and SELECT on dependencies.
-3. Run 09_player_goal_comparison.sql alone. It is an idempotent forward view
-   replacement, not a data migration; no tables or original Phase II views change.
-   It implicitly commits. Do not rerun migration 06 or reset the database.
-4. Run 09_player_goal_comparison_verify.sql: require zero missing/extra/mismatched
-   rows and unchanged source counts/sums. The number of qualifying players may
-   change as data coverage changes.
-5. Restart Flask and hard-refresh, then open Report Studio -> 2 · Player Goal
-   Comparison. Validate CSV/PDF and the partial-subtotal explanation. Genuine
-   empty results and search misses remain empty and are explained.
-
-This does not change the Scheduled Fixtures demo, authentication, API imports or
-role permissions. Migration 09 has not been executed by the assistant. Before
-it is manually applied, the live report still uses the old view. Tests execute
-the actual aggregate offline using SQLite's MIN equivalent of ANY for selection;
-native MySQL verification of the proposed SELECT was read-only.
+- [Detailed Installation and Migration Guide](Phase_III/README.md)
+- [Entity-Relationship Diagram](ER_diagram.svg)
+- [Relational Schema](Relational_schema.svg)
+- [API-Football](https://www.api-football.com/)
+- [Flask Documentation](https://flask.palletsprojects.com/)
+- [MySQL Documentation](https://dev.mysql.com/doc/)
+- [Chart.js Documentation](https://www.chartjs.org/docs/latest/)
